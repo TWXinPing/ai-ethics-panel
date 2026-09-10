@@ -686,6 +686,75 @@ button:disabled {
   padding-bottom: 0;
 }
 
+/* Level guide */
+.level-guide-list {
+  display: grid;
+  gap: 0.85rem;
+}
+.level-guide-card {
+  display: grid;
+  gap: 0.55rem;
+  padding: 1rem 1.1rem;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fcfbf8;
+  border-left: 4px solid var(--accent);
+}
+.level-guide-card header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.45rem 0.85rem;
+}
+.level-guide-card .lv-badge {
+  font-weight: 700;
+  color: var(--accent);
+  font-size: 0.95rem;
+}
+.level-guide-card h3 {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: 1.12rem;
+  font-weight: 650;
+}
+.level-guide-card .en-name {
+  color: var(--ink-muted);
+  font-size: 0.88rem;
+}
+.level-guide-card .desc {
+  margin: 0;
+  font-size: 0.95rem;
+}
+.level-guide-card .human-ai {
+  display: grid;
+  gap: 0.35rem;
+  font-size: 0.88rem;
+  color: var(--ink-muted);
+  background: #f3f7f5;
+  border-radius: 8px;
+  padding: 0.65rem 0.75rem;
+}
+.level-guide-card .subtypes {
+  margin: 0;
+  padding-left: 1.15rem;
+  font-size: 0.88rem;
+  color: var(--ink-muted);
+}
+.level-guide-card .example {
+  margin: 0;
+  font-size: 0.88rem;
+  border-top: 1px dashed var(--line);
+  padding-top: 0.55rem;
+}
+.level-guide-note {
+  margin-top: 1rem;
+  padding: 0.85rem 1rem;
+  background: #f0eee8;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  color: var(--ink-muted);
+}
+
 /* Controversy */
 .stat-grid {
   display: grid;
@@ -862,12 +931,80 @@ const RESPONSE_LABELS = [
 ];
 
 const LEVEL_META = [
-  { level: 0, name_zh: "知識支援", name_en: "Knowledge support" },
-  { level: 1, name_zh: "證據綜整", name_en: "Evidence synthesis" },
-  { level: 2, name_zh: "科學構想", name_en: "Scientific ideation" },
-  { level: 3, name_zh: "科學推論", name_en: "Scientific inference" },
-  { level: 4, name_zh: "研究共構", name_en: "Research co-construction" },
-  { level: 5, name_zh: "自主研究生成", name_en: "Autonomous research generation" }
+  {
+    level: 0,
+    name_zh: "知識支援",
+    name_en: "Knowledge support",
+    desc_zh: "AI 解釋既有概念、術語或教科書知識。人類幾乎保留全部研究決策。",
+    desc_en: "AI explains established concepts or terminology. The human retains essentially all research decisions.",
+    human_zh: "人：決定要問什麼、如何用於研究",
+    ai_zh: "AI：說明與舉例",
+    example_zh: "例：「Impedance control 是什麼意思？」",
+    subtypes: null
+  },
+  {
+    level: 1,
+    name_zh: "證據綜整",
+    name_en: "Evidence synthesis",
+    desc_zh: "研究者決定主題／問題；AI 協助檢索、整理、比較或摘要文獻。AI 可能影響你「看到哪些證據」，但尚未定義 research question。",
+    desc_en: "The researcher sets the topic/question; AI helps retrieve, organize, compare, or summarize literature. AI may shape which evidence is seen, but does not yet define the research question.",
+    human_zh: "人：決定問題與解讀框架",
+    ai_zh: "AI：文獻整理與比較",
+    example_zh: "例：依支持／無效果／其他解釋整理 environmental uncertainty 文獻",
+    subtypes: null
+  },
+  {
+    level: 2,
+    name_zh: "科學構想",
+    name_en: "Scientific ideation",
+    desc_zh: "AI 產生可能的問題、hypotheses、解釋或替代想法。重點開始從「整理證據」轉向「提出科學可能性」。",
+    desc_en: "AI generates possible questions, hypotheses, explanations, or alternatives. The focus shifts from organizing evidence to proposing scientific possibilities.",
+    human_zh: "人：提供興趣或候選想法",
+    ai_zh: "AI：發散構想或協助排序",
+    example_zh: "例：請 AI 產生十個研究問題；或請 AI 依 novelty 排序假設",
+    subtypes: [
+      "2A Divergent brainstorming：AI 產生可能性，人再篩選",
+      "2B Prioritization：AI 評估／選擇哪個想法最值得做"
+    ]
+  },
+  {
+    level: 3,
+    name_zh: "科學推論",
+    name_en: "Scientific inference",
+    desc_zh: "研究者已提供實質的科學假設或證據，但 AI 執行一個重要的推論步驟。各分支是平行的委派形式，不預設哪一支比較「不道德」。",
+    desc_en: "The researcher already contributes substantive assumptions or evidence, but AI performs an important inferential step. Branches are parallel forms of delegation—not ranked by ethical severity.",
+    human_zh: "人：提供前提、機制或設計骨架",
+    ai_zh: "AI：完成其中一個關鍵推論環節",
+    example_zh: "例：已知機制 → 請 AI 設計可區辨實驗；或已有設計 → 請 AI 寫 analysis plan",
+    subtypes: [
+      "3A Theory/evidence → research question 或 hypothesis",
+      "3B Candidate mechanism → experimental design",
+      "3C Experimental design → analysis plan",
+      "3D Results → interpretation"
+    ]
+  },
+  {
+    level: 4,
+    name_zh: "研究共構",
+    name_en: "Research co-construction",
+    desc_zh: "AI 整合多個科學步驟，而不只完成單一推論。研究者主要給大方向，或從 AI 建議中挑選／核准。",
+    desc_en: "AI integrates multiple scientific steps rather than completing only one inferential step. The researcher mainly supplies a broad direction or selects/approves AI suggestions.",
+    human_zh: "人：給方向、挑選、核准",
+    ai_zh: "AI：串起 gap → hypotheses → design → analysis 等",
+    example_zh: "例：請 AI 依文獻找 gap、建 rationale、提 hypotheses 並設計實驗，你再挑一個做",
+    subtypes: null
+  },
+  {
+    level: 5,
+    name_zh: "自主研究生成",
+    name_en: "Autonomous research generation",
+    desc_zh: "人類只提供寬泛目標或身份／場域脈絡；AI 建構大部分智識研究管線：主題 → 文獻 → gap → 理論 → 問題 → hypotheses → 實驗 → 分析 → 預期結果。",
+    desc_en: "The human provides only a broad goal or identity/context; AI constructs most of the intellectual pipeline from topic through expected results.",
+    human_zh: "人：身份／場域／「幫我產生完整計畫」",
+    ai_zh: "AI：幾乎整條研究智識管線",
+    example_zh: "例：以碩士生身份請 AI 自行決定主題並產出可發表的完整研究計畫",
+    subtypes: null
+  }
 ];
 
 /* ============================================================================
@@ -1078,7 +1215,7 @@ const Q_BY_ID = Object.fromEntries(QUESTIONS.map(q => [q.id, q]));
 ============================================================================ */
 const STATE = {
   view: "landing", // landing | demographics | student | submitted | teacher
-  teacherSection: 0, // 0 overview, 1 bars, 2 hierarchy, 3 level agg, 4 compare, 5 final
+  teacherSection: 0, // 0 overview, 1 bars, 2 level guide, 3 hierarchy, 4 level agg, 5 compare, 6 final
   participantId: null,
   order: [],
   index: 0,
@@ -1626,6 +1763,7 @@ function sectionNavHtml() {
   const sections = [
     "總覽",
     "每一題判斷",
+    "層級說明",
     "AI involvement",
     "跨層級比較",
     "對照討論",
@@ -1634,6 +1772,36 @@ function sectionNavHtml() {
   return `<div class="section-nav">${sections.map((s, i) =>
     `<button class="${STATE.teacherSection === i ? "active" : ""}" data-action="goto-section" data-section="${i}">${s}</button>`
   ).join("")}</div>`;
+}
+
+function renderTeacherLevelGuide() {
+  return `
+    <div class="panel">
+      <h2>AI involvement 層級說明</h2>
+      <p class="lead">這套層級描述的是<strong>把多少 scientific reasoning 委派給 AI</strong>，不是倫理分數。層級越高 ≠ 自動越不可接受。</p>
+      <div class="level-guide-list">
+        ${LEVEL_META.map(lm => `
+          <article class="level-guide-card">
+            <header>
+              <span class="lv-badge">Level ${lm.level}</span>
+              <h3>${escapeHtml(lm.name_zh)}</h3>
+              <span class="en-name">${escapeHtml(lm.name_en)}</span>
+            </header>
+            <p class="desc">${escapeHtml(lm.desc_zh)}</p>
+            <p class="desc" style="color:var(--ink-muted);font-size:0.9rem">${escapeHtml(lm.desc_en)}</p>
+            <div class="human-ai">
+              <div>${escapeHtml(lm.human_zh)}</div>
+              <div>${escapeHtml(lm.ai_zh)}</div>
+            </div>
+            ${lm.subtypes ? `<ul class="subtypes">${lm.subtypes.map(s => `<li>${escapeHtml(s)}</li>`).join("")}</ul>` : ""}
+            <p class="example">${escapeHtml(lm.example_zh)}</p>
+          </article>`).join("")}
+      </div>
+      <div class="level-guide-note">
+        <strong>提醒：</strong>有些題目刻意落在兩個層級之間（邊界題）。實作產出很多（例如大量程式碼）也不等於 intellectual delegation 很高——這正是後續對照討論要拆開的點。
+        本架構是<strong>教學用討論框架</strong>，不是正式的普世倫理標準。
+      </div>
+    </div>`;
 }
 
 function renderTeacherOverview() {
@@ -1871,6 +2039,7 @@ function renderTeacher() {
   const sections = [
     renderTeacherOverview,
     renderTeacherBars,
+    renderTeacherLevelGuide,
     renderTeacherHierarchy,
     renderTeacherLevelAgg,
     renderTeacherCompare,
@@ -1910,11 +2079,11 @@ function render() {
   if (STATE.view === "landing") {
     mountQRCode();
   }
-  if (STATE.view === "teacher" && STATE.teacherSection === 3) {
+  if (STATE.view === "teacher" && STATE.teacherSection === 4) {
     mountLevelChart();
     mountLevelTable();
   }
-  if (STATE.view === "teacher" && STATE.teacherSection === 2 && STATE.selectedQuestionId) {
+  if (STATE.view === "teacher" && STATE.teacherSection === 3 && STATE.selectedQuestionId) {
     fillHierarchyDetail(STATE.selectedQuestionId);
   }
 }
@@ -2199,13 +2368,13 @@ document.getElementById("app").addEventListener("click", async (e) => {
       render();
       break;
     case "next-section":
-      STATE.teacherSection = Math.min(5, STATE.teacherSection + 1);
-      if (STATE.teacherSection === 5) STATE.finalStep = 0;
+      STATE.teacherSection = Math.min(6, STATE.teacherSection + 1);
+      if (STATE.teacherSection === 6) STATE.finalStep = 0;
       render();
       break;
     case "goto-section":
       STATE.teacherSection = parseInt(t.getAttribute("data-section"), 10);
-      if (STATE.teacherSection === 5) STATE.finalStep = Math.min(STATE.finalStep, 6);
+      if (STATE.teacherSection === 6) STATE.finalStep = Math.min(STATE.finalStep, 6);
       render();
       break;
     case "open-question":
@@ -2222,7 +2391,7 @@ document.getElementById("app").addEventListener("click", async (e) => {
     case "reveal-level": {
       const qid = t.getAttribute("data-qid");
       STATE.levelsRevealed[qid] = true;
-      if (STATE.view === "teacher" && STATE.teacherSection === 2) {
+      if (STATE.view === "teacher" && STATE.teacherSection === 3) {
         fillHierarchyDetail(qid);
       }
       break;
@@ -2254,7 +2423,7 @@ document.getElementById("modal-root").addEventListener("click", (e) => {
     const qid = t.getAttribute("data-qid");
     STATE.levelsRevealed[qid] = true;
     openQuestionModal(qid);
-    if (STATE.view === "teacher" && STATE.teacherSection === 2) fillHierarchyDetail(qid);
+    if (STATE.view === "teacher" && STATE.teacherSection === 3) fillHierarchyDetail(qid);
   } else if (action === "open-question") {
     openQuestionModal(t.getAttribute("data-qid"));
   }
@@ -2264,7 +2433,7 @@ let resizeTimer;
 window.addEventListener("resize", () => {
   clearTimeout(resizeTimer);
   resizeTimer = setTimeout(() => {
-    if (STATE.view === "teacher" && STATE.teacherSection === 3) {
+    if (STATE.view === "teacher" && STATE.teacherSection === 4) {
       destroyCharts();
       mountLevelChart();
     }
