@@ -152,6 +152,16 @@ button:disabled {
   font-size: 0.92rem;
   text-align: center;
 }
+.banner-live {
+  background: #e4efe9;
+  color: #1f463c;
+  border: 1px solid #b7d4c7;
+  border-radius: 10px;
+  padding: 0.55rem 0.9rem;
+  margin-bottom: 1rem;
+  font-size: 0.92rem;
+  text-align: center;
+}
 
 /* Landing */
 .landing {
@@ -1088,12 +1098,12 @@ body.presentation .instructor-panel.open {
 const CONFIG = {
   // Fill after deployment, e.g. "https://yourname.github.io/ai-ethics/?mode=student"
   STUDENT_URL: "https://twxinping.github.io/ai-ethics-panel/?mode=student",
-  // Supabase placeholders — leave empty to use Demo / localStorage mode
-  SUPABASE_URL: "",
-  SUPABASE_ANON_KEY: "",
+  // Live group responses (anon / publishable key only — never service_role)
+  SUPABASE_URL: "https://hkxvlzfwjlxtmtmnkkji.supabase.co",
+  SUPABASE_ANON_KEY: "sb_publishable_sh-Eej8i_YUD_i5PHgHxag_BClaX9Aj",
   SESSION_ID: "lab-meeting-default",
   STORAGE_KEY: "ai_ethics_survey_v5",
-  TABLE_NAME: "ai_ethics_responses"
+  TABLE_NAME: "ai_ethics_response"
 };
 
 const RESPONSE_LABELS = [
@@ -1858,7 +1868,11 @@ const STATE = {
   instructorOpen: false,
   finalStep: 0,
   charts: {},
-  supabaseReady: false
+  supabaseReady: false,
+  livePollTimer: null,
+  liveLastRefresh: null,
+  liveError: null,
+  liveParticipantCount: 0
 };
 
 function uid() {
@@ -2003,20 +2017,77 @@ function generateDemoResponses(n = 30) {
   return responses;
 }
 
+function updateLiveMeta(rows) {
+  STATE.responses = Array.isArray(rows) ? rows : [];
+  STATE.isDemoData = false;
+  STATE.dataMode = "live";
+  STATE.liveLastRefresh = new Date().toISOString();
+  STATE.liveError = null;
+  STATE.liveParticipantCount = new Set(
+    STATE.responses.map(r => r.anonymous_participant_id).filter(Boolean)
+  ).size;
+}
+
+async function fetchLiveResponses() {
+  const rows = await supabaseRequest(
+    `${CONFIG.TABLE_NAME}?session_id=eq.${encodeURIComponent(CONFIG.SESSION_ID)}&select=*`,
+    { method: "GET", prefer: "return=representation" }
+  );
+  updateLiveMeta(rows);
+  return STATE.responses;
+}
+
+async function refreshLiveData(opts = {}) {
+  const { silent = false } = opts;
+  if (!STATE.supabaseReady) {
+    if (!silent) alert("尚未設定 Supabase。請在 CONFIG 填入 SUPABASE_URL 與 SUPABASE_ANON_KEY。");
+    return false;
+  }
+  try {
+    const before = STATE.responses.length;
+    await fetchLiveResponses();
+    if (!silent || before !== STATE.responses.length) render();
+    else if (STATE.view === "teacher") {
+      // Still refresh participant count label without full redraw when unchanged
+      const el = document.getElementById("live-meta");
+      if (el) {
+        el.textContent = `Live · ${STATE.liveParticipantCount} 人 · ${STATE.responses.length} 筆 · 剛更新`;
+      }
+    }
+    return true;
+  } catch (err) {
+    console.warn("Live refresh failed:", err);
+    STATE.liveError = String(err.message || err);
+    if (!silent) alert("無法讀取即時資料：" + STATE.liveError);
+    return false;
+  }
+}
+
+function stopLivePolling() {
+  if (STATE.livePollTimer) {
+    clearInterval(STATE.livePollTimer);
+    STATE.livePollTimer = null;
+  }
+}
+
+function startLivePolling() {
+  stopLivePolling();
+  if (!STATE.supabaseReady) return;
+  STATE.livePollTimer = setInterval(() => {
+    if (STATE.view !== "teacher" || STATE.isDemoData) return;
+    refreshLiveData({ silent: true });
+  }, 5000);
+}
+
 async function initData() {
   STATE.supabaseReady = isSupabaseConfigured();
   if (STATE.supabaseReady) {
     try {
-      const rows = await supabaseRequest(
-        `${CONFIG.TABLE_NAME}?session_id=eq.${encodeURIComponent(CONFIG.SESSION_ID)}&select=*`,
-        { method: "GET", prefer: "return=representation" }
-      );
-      STATE.responses = Array.isArray(rows) ? rows : [];
-      STATE.isDemoData = false;
-      STATE.dataMode = "live";
+      await fetchLiveResponses();
       return;
     } catch (err) {
       console.warn("Supabase unavailable, falling back to demo/local:", err);
+      STATE.liveError = String(err.message || err);
     }
   }
 
@@ -2034,6 +2105,7 @@ async function initData() {
 }
 
 function loadDemoData() {
+  stopLivePolling();
   STATE.responses = generateDemoResponses(30);
   STATE.isDemoData = true;
   STATE.dataMode = "demo";
@@ -2046,12 +2118,14 @@ function clearDemoData() {
   STATE.isDemoData = false;
   STATE.dataMode = STATE.supabaseReady ? "live" : "local";
   persistLocalResponses();
+  if (STATE.supabaseReady) startLivePolling();
   render();
 }
 
 function resetResults() {
-  if (!confirm("確定要清除目前所有結果資料嗎？")) return;
+  if (!confirm("確定要清除目前瀏覽器上的結果顯示嗎？（不會刪除 Supabase 雲端資料）")) return;
   clearDemoData();
+  if (STATE.supabaseReady) refreshLiveData({ silent: true });
 }
 
 async function submitParticipantAnswers() {
@@ -2072,28 +2146,19 @@ async function submitParticipantAnswers() {
         body: JSON.stringify(records),
         prefer: "return=minimal"
       });
-      STATE.dataMode = "live";
-      STATE.isDemoData = false;
-      // refresh
-      const rows = await supabaseRequest(
-        `${CONFIG.TABLE_NAME}?session_id=eq.${encodeURIComponent(CONFIG.SESSION_ID)}&select=*`,
-        { method: "GET", prefer: "return=representation" }
-      );
-      if (Array.isArray(rows)) STATE.responses = rows;
-      return;
+      await fetchLiveResponses();
+      return { ok: true, mode: "live" };
     } catch (err) {
-      console.warn("Live submit failed, saving locally:", err);
+      console.warn("Live submit failed:", err);
+      throw new Error("即時提交失敗（請確認網路與 Supabase 設定）：" + (err.message || err));
     }
   }
 
   // Local / demo fallback: append test responses
   STATE.responses = STATE.responses.concat(records.map(r => ({ ...r, _demo: false })));
-  // If previously pure demo, mark mixed but keep banner until cleared
-  if (STATE.isDemoData) {
-    // keep demo label if demo rows remain; still persist
-  }
   STATE.dataMode = STATE.isDemoData ? "demo" : "local";
   persistLocalResponses();
+  return { ok: true, mode: STATE.dataMode };
 }
 
 /* ============================================================================
@@ -2238,8 +2303,15 @@ function bilingualPromptHtml(q) {
 }
 
 function demoBannerHtml() {
+  if (STATE.dataMode === "live" && !STATE.isDemoData) {
+    const err = STATE.liveError ? ` · 讀取警告：${escapeHtml(STATE.liveError)}` : "";
+    return `<div class="banner-live"><strong>即時彙整（Supabase）</strong> — <span id="live-meta">${STATE.liveParticipantCount} 人 · ${STATE.responses.length} 筆</span> · 約每 5 秒自動更新${err}</div>`;
+  }
+  if (STATE.supabaseReady && STATE.liveError && STATE.isDemoData) {
+    return `<div class="banner-demo"><strong>Supabase 連線失敗，暫用示範／本機資料</strong> — ${escapeHtml(STATE.liveError)}</div>`;
+  }
   if (!STATE.isDemoData) return "";
-  return `<div class="banner-demo"><strong>示範資料，非真實參與者回答</strong> — 可用主持面板載入／清除示範資料。</div>`;
+  return `<div class="banner-demo"><strong>示範資料，非真實參與者回答</strong> — 未接上雲端前，每位參與者的答案只存在自己的瀏覽器，主持端看不到。</div>`;
 }
 
 function legendHtml() {
@@ -2390,10 +2462,11 @@ function instructorPanelHtml() {
     <div class="instructor-panel ${STATE.instructorOpen ? "open" : ""} ${STATE.presentation ? "" : "force-show"}" id="instructor-panel">
       <header data-action="toggle-instructor">
         <span>主持／結果面板 ${STATE.instructorOpen ? "▾" : "▸"}</span>
-        <span style="font-weight:500;color:var(--ink-muted);font-size:0.82rem">${STATE.dataMode === "live" ? "Live / Supabase" : STATE.isDemoData ? "Demo" : "Local"}</span>
+        <span style="font-weight:500;color:var(--ink-muted);font-size:0.82rem">${STATE.dataMode === "live" ? "Live / Supabase" : STATE.isDemoData ? "Demo" : "Local"}${STATE.supabaseReady ? "" : " · 未接雲端"}</span>
       </header>
       <div class="instructor-body">
         <div class="control-grid">
+          <button class="primary" data-action="refresh-live" ${STATE.supabaseReady ? "" : "disabled"}>重新整理即時資料</button>
           <button data-action="load-demo">載入示範資料</button>
           <button data-action="clear-demo">清除示範資料</button>
           <button data-action="reset-results">Reset results</button>
@@ -3227,6 +3300,12 @@ function startTeacher() {
   STATE.view = "teacher";
   STATE.teacherSection = 0;
   STATE.finalStep = 0;
+  if (STATE.supabaseReady && !STATE.isDemoData) {
+    startLivePolling();
+    refreshLiveData({ silent: true });
+  } else {
+    stopLivePolling();
+  }
   render();
 }
 
@@ -3277,11 +3356,19 @@ document.getElementById("app").addEventListener("click", async (e) => {
       break;
     case "submit-all": {
       t.disabled = true;
-      await submitParticipantAnswers();
-      STATE.view = "submitted";
-      render();
+      try {
+        await submitParticipantAnswers();
+        STATE.view = "submitted";
+        render();
+      } catch (err) {
+        t.disabled = false;
+        alert(err.message || String(err));
+      }
       break;
     }
+    case "refresh-live":
+      await refreshLiveData({ silent: false });
+      break;
     case "toggle-instructor":
       STATE.instructorOpen = !STATE.instructorOpen;
       render();
