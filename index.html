@@ -1092,7 +1092,7 @@ const CONFIG = {
   SUPABASE_URL: "",
   SUPABASE_ANON_KEY: "",
   SESSION_ID: "lab-meeting-default",
-  STORAGE_KEY: "ai_ethics_survey_v4",
+  STORAGE_KEY: "ai_ethics_survey_v5",
   TABLE_NAME: "ai_ethics_responses"
 };
 
@@ -1113,6 +1113,39 @@ const GOVERNANCE_LAYERS = [
   { id: "strong_oversight", zh: "Strong Oversight & Reconstruction｜強化督導與獨立重建", en: "Strong Oversight & Independent Reconstruction", note_zh: "保留 provenance、展示實質人類智識貢獻", note_en: "Maintain provenance and demonstrate substantial human intellectual contribution" }
 ];
 
+
+/** Epistemic downsides of LLM use in academic work (Tang, 2025, Publications 13(4), 63).
+ *  Distinct from research-ethics violations: intrinsic epistemic costs of AI use.
+ *  https://doi.org/10.3390/publications13040063
+ */
+const TANG_EPISTEMIC = {
+  source: "Tang, B. L. (2025). The epistemic downside of using LLM-based generative AI in academic writing. Publications, 13(4), 63.",
+  doi: "https://doi.org/10.3390/publications13040063",
+  triad: [
+    {
+      id: "illusion",
+      zh: "理解幻覺｜Illusion of understanding",
+      en: "Illusion of understanding (epistemic detriment)",
+      note_zh: "以為自己懂了、產出變多，但實際上理解變少；流暢內容不等於真正掌握。",
+      note_en: "We think we understand more than we do—produce more, understand less; fluency ≠ mastery."
+    },
+    {
+      id: "dulling",
+      zh: "認知鈍化｜Cognitive dulling",
+      en: "Cognitive dulling / impairment",
+      note_zh: "認知卸載削弱批判思考、記憶鞏固與創造力；短期省力，長期累積 cognitive debt。",
+      note_en: "Cognitive offloading can blunt critical thinking, retention, and creativity; short-term ease, longer-term cognitive debt."
+    },
+    {
+      id: "dependency",
+      zh: "AI 依賴｜AI dependency",
+      en: "AI dependency (habitual and/or emotional)",
+      note_zh: "習慣性或情感性依賴；工具拿掉後表現下滑，難以獨立完成智識工作。",
+      note_en: "Habitual or emotional reliance; performance drops when AI is removed; difficulty working independently."
+    }
+  ]
+};
+
 const LEVEL_META = [
   {
     level: 0,
@@ -1125,12 +1158,12 @@ const LEVEL_META = [
     aiDelegation_en: "AI explains established concepts, terminology, methods, or theories. The researcher delegates explanation and tutoring, not consequential scientific decision-making.",
     aiDelegationShort_zh: "解釋／tutoring",
     aiDelegationShort_en: "Explanation",
-    epistemicRisk_zh: "錯誤資訊與理解幻覺（misinformation and illusion of understanding）",
-    epistemicRisk_en: "Misinformation and illusion of understanding",
-    epistemicRiskShort_zh: "錯誤資訊／理解幻覺",
-    epistemicRiskShort_en: "Misinformation / illusion of understanding",
-    epistemicRiskDetails_zh: ["接受錯誤解釋", "過度簡化", "誤解技術概念", "把流暢說明誤認為真正理解", "以為懂了卻無法獨立應用或重述"],
-    epistemicRiskDetails_en: ["accepting incorrect explanations", "oversimplification", "misunderstanding technical concepts", "mistaking fluency for understanding", "believing one understands without independent application"],
+    epistemicRisk_zh: "理解幻覺（illusion of understanding）：流暢解釋造成「以為懂了」",
+    epistemicRisk_en: "Illusion of understanding: fluent explanations create a false sense of mastery",
+    epistemicRiskShort_zh: "理解幻覺",
+    epistemicRiskShort_en: "Illusion of understanding",
+    epistemicRiskDetails_zh: ["把 AI 的流暢說明誤認為自己已真正理解（Tang, 2025）", "誤把 AI 當成 epistemic expertise／權威", "無法獨立重述或應用該概念", "短期省力，埋下 cognitive debt 的可能"],
+    epistemicRiskDetails_en: ["mistaking fluent AI explanations for genuine understanding (Tang, 2025)", "treating AI as epistemic expertise/authority", "inability to independently restate or apply the concept", "short-term ease that may seed cognitive debt"],
     governance_zh: "核對驗證與主動理解（Verification and active understanding）",
     governance_en: "Verification and active understanding",
     governanceShort_zh: "核對驗證",
@@ -1152,12 +1185,12 @@ const LEVEL_META = [
     aiDelegation_en: "AI retrieves, organizes, summarizes, compares, or synthesizes existing evidence. The researcher delegates part of the evidence-navigation process.",
     aiDelegationShort_zh: "證據導航",
     aiDelegationShort_en: "Evidence navigation",
-    epistemicRisk_zh: "被扭曲的證據視野（distorted evidence landscape）",
-    epistemicRisk_en: "Distorted evidence landscape",
-    epistemicRiskShort_zh: "被扭曲的證據視野",
-    epistemicRiskShort_en: "Distorted evidence landscape",
-    epistemicRiskDetails_zh: ["捏造引用", "遺漏重要文獻", "選擇性檢索", "過度代表易取得或高被引文獻", "少數／矛盾觀點消失", "文獻同質化", "AI 引入的隱藏選文偏誤"],
-    epistemicRiskDetails_en: ["fabricated citations", "missing important literature", "selective retrieval", "overrepresentation of accessible/highly cited work", "loss of minority or contradictory perspectives", "literature homogenization", "hidden selection bias"],
+    epistemicRisk_zh: "理解幻覺＋認知卸載：以為掌握了文獻全貌",
+    epistemicRisk_en: "Illusion of understanding + cognitive offloading of evidence synthesis",
+    epistemicRiskShort_zh: "文獻理解幻覺",
+    epistemicRiskShort_en: "Illusion of literature mastery",
+    epistemicRiskDetails_zh: ["以為已綜整證據，實則未真正走過合成過程（produce more, understand less）", "認知卸載使批判性比較文獻的能力變鈍", "AI 同質化視角／公式化整理，降低多元與矛盾觀點的可見度", "對錯誤引用或遺漏文獻缺乏深入察覺"],
+    epistemicRiskDetails_en: ["believing one has synthesized the field without doing the epistemic work", "cognitive offloading dulls critical comparison of sources", "homogenized/formulaic summaries reduce visibility of dissenting views", "shallow detection of fabricated or missing citations"],
     governance_zh: "來源可追溯與原始文獻核對（Source traceability and primary-source verification）",
     governance_en: "Source traceability and primary-source verification",
     governanceShort_zh: "來源可追溯",
@@ -1179,12 +1212,12 @@ const LEVEL_META = [
     aiDelegation_en: "The human has already made the consequential scientific decisions; AI performs implementation. Large amounts of AI-generated code do not necessarily imply high scientific delegation.",
     aiDelegationShort_zh: "實作／執行",
     aiDelegationShort_en: "Implementation",
-    epistemicRisk_zh: "缺乏程序理解的執行（execution without procedural understanding）",
-    epistemicRisk_en: "Execution without procedural understanding",
-    epistemicRiskShort_zh: "程序不透明／自動化錯誤",
-    epistemicRiskShort_en: "Procedural opacity / automation error",
-    epistemicRiskDetails_zh: ["隱藏程式錯誤", "靜默改變實作", "不正確預設值", "自動化偏誤", "無法理解或重現工作流程", "依賴自己無法檢查的工具"],
-    epistemicRiskDetails_en: ["hidden coding errors", "silent implementation changes", "incorrect defaults", "automation bias", "inability to understand/reproduce the workflow", "dependence on unauditable tools"],
+    epistemicRisk_zh: "程序理解幻覺＋實作技能卸載／依賴",
+    epistemicRisk_en: "Illusion of procedural understanding + offloading/dependency in implementation",
+    epistemicRiskShort_zh: "程序理解幻覺／依賴",
+    epistemicRiskShort_en: "Procedural illusion / dependency",
+    epistemicRiskDetails_zh: ["以為自己「懂」實驗／分析流程，實則無法解釋關鍵實作步驟", "認知卸載削弱除錯與程序推理能力（cognitive dulling）", "習慣性依賴 AI 產生程式；工具不可用時產出崩盤", "隱藏錯誤與自動化偏誤被流暢 code 掩蓋"],
+    epistemicRiskDetails_en: ["feeling one ‘understands’ the workflow without being able to explain key steps", "offloading dulls debugging and procedural reasoning", "habitual dependency on AI-generated code", "fluent code masking silent errors and automation bias"],
     governance_zh: "驗證、可重現與程序理解（Validation, reproducibility, and procedural understanding）",
     governance_en: "Validation, reproducibility, and procedural understanding",
     governanceShort_zh: "驗證與可重現",
@@ -1206,12 +1239,12 @@ const LEVEL_META = [
     aiDelegation_en: "The researcher owns the scientific question or hypothesis, but AI helps decide how the question should be tested or analyzed.",
     aiDelegationShort_zh: "如何檢驗／分析",
     aiDelegationShort_en: "How to test/analyze",
-    epistemicRisk_zh: "未經檢視的方法假設（unexamined methodological assumptions）",
-    epistemicRisk_en: "Unexamined methodological assumptions",
-    epistemicRiskShort_zh: "未經檢視的方法假設",
-    epistemicRiskShort_en: "Unexamined methodological assumptions",
-    epistemicRiskDetails_zh: ["不適當模型選擇", "無效操作型定義", "隱藏假設", "未被辨識的 researcher degrees of freedom", "因方便結果而選方法", "無法說明為何此方法回答此問題"],
-    epistemicRiskDetails_en: ["inappropriate model choice", "invalid operationalization", "hidden assumptions", "unrecognized researcher degrees of freedom", "methods chosen for convenient outcomes", "inability to justify why a method answers the question"],
+    epistemicRisk_zh: "方法理解幻覺＋方法判斷能力鈍化",
+    epistemicRisk_en: "Illusion of methodological understanding + dulling of methodological judgment",
+    epistemicRiskShort_zh: "方法理解幻覺",
+    epistemicRiskShort_en: "Methodological illusion",
+    epistemicRiskDetails_zh: ["以為選定了「正確」模型／設計，卻無法證成假設與取捨", "方法推理的 cognitive offloading → 批判思考下降", "對 AI 方法建議的過度信心與依賴", "短期完成 analysis plan，長期累積無法獨立做方法判斷的 debt"],
+    epistemicRiskDetails_en: ["accepting a ‘correct’ model/design one cannot justify", "offloading methodological reasoning reduces critical thinking", "overconfidence in and dependency on AI method suggestions", "short-term completion with longer-term loss of independent judgment"],
     governance_zh: "人類的方法證成（Human methodological justification）",
     governance_en: "Human methodological justification",
     governanceShort_zh: "方法證成",
@@ -1233,12 +1266,12 @@ const LEVEL_META = [
     aiDelegation_en: "AI participates directly in generating scientific inference or claims (evidence → inference → claim).",
     aiDelegationShort_zh: "推論／主張什麼",
     aiDelegationShort_en: "What to infer/claim",
-    epistemicRisk_zh: "認識論所有權流失（loss of epistemic ownership）",
-    epistemicRisk_en: "Loss of epistemic ownership",
-    epistemicRiskShort_zh: "認識論所有權流失",
-    epistemicRiskShort_en: "Loss of epistemic ownership",
-    epistemicRiskDetails_zh: ["認知卸載", "確認偏誤", "過早收斂到看似合理的敘事", "科學構想同質化", "無法重建 claim 如何得出", "無法區分證據與 AI 生成的合理性", "獨立批判推理被侵蝕", "接受自己無法辯護的解釋"],
-    epistemicRiskDetails_en: ["cognitive offloading", "confirmation bias", "premature narrative convergence", "homogenization of ideas", "inability to reconstruct how a claim was derived", "inability to distinguish evidence from AI plausibility", "erosion of independent critical reasoning", "accepting undefendable explanations"],
+    epistemicRisk_zh: "主張理解幻覺＋推論卸載（produce more, understand less）",
+    epistemicRisk_en: "Illusion of understanding claims + offloading of inference",
+    epistemicRiskShort_zh: "主張理解幻覺",
+    epistemicRiskShort_en: "Illusion of owning claims",
+    epistemicRiskDetails_zh: ["在自己名下提出 claim，卻無法真正掌握或辯護其內容（Tang, 2025）", "跳過文獻拼湊與推論合成 → 認識過程被削弱", "批判思考與獨立思想下降；易受看似合理敘事左右", "構想同質化；對 AI 產生的 hypothesis／解釋產生依賴"],
+    epistemicRiskDetails_en: ["authoring claims one cannot truly master or defend (Tang, 2025)", "skipping synthesis weakens the epistemological process", "reduced critical/independent thought; vulnerability to fluent narratives", "homogenized ideas; dependency on AI-generated hypotheses/explanations"],
     governance_zh: "主張可問責與對抗式驗證（Claim accountability and adversarial verification）",
     governance_en: "Claim accountability and adversarial verification",
     governanceShort_zh: "主張可問責",
@@ -1262,12 +1295,12 @@ const LEVEL_META = [
     aiDelegation_en: "The human provides only a broad topic, interest, or goal; AI constructs most of the intellectual research pipeline. The researcher mainly selects, approves, or executes.",
     aiDelegationShort_zh: "該做什麼研究",
     aiDelegationShort_en: "What research to conduct",
-    epistemicRisk_zh: "認識依賴與研究者自主性侵蝕（epistemic dependency and erosion of researcher autonomy）",
-    epistemicRisk_en: "Epistemic dependency and erosion of researcher autonomy",
-    epistemicRiskShort_zh: "認識依賴／自主性流失",
-    epistemicRiskShort_en: "Epistemic dependency / loss of autonomy",
-    epistemicRiskDetails_zh: ["智識所有權流失", "技能退化", "無法獨立提出研究問題", "偏誤貫穿整條管線", "依賴 AI 生成的研究議程", "研究問題同質化", "人機判斷邊界不清", "難以展示真實認識貢獻"],
-    epistemicRiskDetails_en: ["loss of intellectual ownership", "deskilling", "inability to independently formulate questions", "systemic biases across the pipeline", "dependence on AI-generated agendas", "homogenization of research questions", "unclear human–machine boundary", "difficulty demonstrating epistemic contribution"],
+    epistemicRisk_zh: "AI 依賴最大化＋認識盲視／自主性侵蝕",
+    epistemicRisk_en: "Maximal AI dependency + epistemic blindsight / eroded autonomy",
+    epistemicRiskShort_zh: "AI 依賴／自主性侵蝕",
+    epistemicRiskShort_en: "Dependency / eroded autonomy",
+    epistemicRiskDetails_zh: ["習慣性與情感性依賴：把 AI 當研究搭檔／拐杖（Tang, 2025）", "工具移除後難以重建「為何做這個研究、為何如此設計」", "獨立提出問題與批判推理能力鈍化", "產出變多但理解變少；認識盲視（epistemic blindsight）"],
+    epistemicRiskDetails_en: ["habitual/emotional dependency treating AI as partner or crutch (Tang, 2025)", "inability to reconstruct why the research should exist when AI is removed", "dulling of independent question formation and critical reasoning", "produce more, understand less; epistemic blindsight"],
     governance_zh: "強化人類督導、provenance、獨立重建；某些情境可能需要額外揭露或限制委派——但禁止不是 Level 5 的自動後果。",
     governance_en: "Strong human oversight, provenance, independent reconstruction; some settings may warrant disclosure or limits—but prohibition is not an automatic consequence of Level 5.",
     governanceShort_zh: "強化督導與獨立重建",
@@ -1299,8 +1332,8 @@ const QUESTIONS = [
 
     aiDelegationZh: "委派概念解釋與 tutoring，不委派研究決策",
     aiDelegationEn: "Delegates concept explanation/tutoring, not research decisions",
-    epistemicRisksZh: ["錯誤或過度簡化的解釋", "流暢說明造成的理解幻覺"],
-    epistemicRisksEn: ["incorrect or oversimplified explanations", "illusion of understanding from fluent text"],
+    epistemicRisksZh: ["理解幻覺：流暢解釋≠真正掌握", "誤信 AI 具 epistemic expertise"],
+    epistemicRisksEn: ["illusion of understanding from fluent tutoring", "misplaced epistemic trust in AI"],
     governanceResponsesZh: ["與權威來源比對", "嘗試獨立重述概念"],
     governanceResponsesEn: ["compare with authoritative sources", "attempt independent restatement"],
     ethicalIssuesZh: ["解釋是否正確", "是否過度依賴 AI 當教科書"],
@@ -1329,8 +1362,8 @@ const QUESTIONS = [
 
     aiDelegationZh: "概念比較 + 開始策展／推薦文獻",
     aiDelegationEn: "Concept comparison plus beginning literature curation",
-    epistemicRisksZh: ["推薦清單的選文偏誤", "覆蓋不完整"],
-    epistemicRisksEn: ["selection bias in recommended readings", "incomplete coverage"],
+    epistemicRisksZh: ["理解幻覺＋開始卸載文獻策展", "同質化推薦清單"],
+    epistemicRisksEn: ["illusion of mastery plus offloaded curation", "homogenized reading lists"],
     governanceResponsesZh: ["核對經典文獻是否真的關鍵", "自行擴充檢索"],
     governanceResponsesEn: ["verify that recommended classics are truly central", "expand the search independently"],
     ethicalIssuesZh: ["選文偏誤", "覆蓋不足"],
@@ -1359,8 +1392,8 @@ const QUESTIONS = [
 
     aiDelegationZh: "在已定問題下進行證據導航與分類綜整",
     aiDelegationEn: "Evidence navigation and classified synthesis under a fixed question",
-    epistemicRisksZh: ["被扭曲的證據視野", "捏造或錯誤引用", "矛盾證據被稀釋"],
-    epistemicRisksEn: ["distorted evidence landscape", "fabricated/incorrect citations", "dilution of contradictory evidence"],
+    epistemicRisksZh: ["以為已掌握證據全貌（理解幻覺）", "綜整過程被卸載 → 批判比較變鈍"],
+    epistemicRisksEn: ["illusion of having mastered the evidence base", "offloaded synthesis dulls critical comparison"],
     governanceResponsesZh: ["回到原始文獻", "主動尋找矛盾證據", "不把摘要當成窮盡"],
     governanceResponsesEn: ["return to primary sources", "actively seek contradictory evidence", "do not treat summaries as exhaustive"],
     ethicalIssuesZh: ["引用正確性", "選文偏誤"],
@@ -1390,8 +1423,8 @@ const QUESTIONS = [
 
     aiDelegationZh: "判斷什麼算重要 research gap（介於證據整理與科學詮釋）",
     aiDelegationEn: "Judging what counts as an important research gap (between evidence work and scientific interpretation)",
-    epistemicRisksZh: ["以 AI 的『重要性』判斷取代研究者判斷", "新穎性宣稱未經核對"],
-    epistemicRisksEn: ["AI importance judgments replacing researcher judgment", "unverified novelty claims"],
+    epistemicRisksZh: ["把 AI 的 gap 判斷當成自己的洞見", "認知卸載削弱獨立評估重要性的能力"],
+    epistemicRisksEn: ["treating AI gap judgments as one’s own insight", "offloading dulls independent evaluation of importance"],
     governanceResponsesZh: ["人獨立評估 gap 是否真的重要", "核對文獻基礎後再形成問題"],
     governanceResponsesEn: ["independently evaluate whether gaps truly matter", "form questions only after checking the evidence base"],
     ethicalIssuesZh: ["誰定義 gap", "新穎性宣稱"],
@@ -1420,8 +1453,8 @@ const QUESTIONS = [
 
     aiDelegationZh: "產生潛在研究問題／hypotheses（4A）",
     aiDelegationEn: "Generating potential research questions/hypotheses (4A)",
-    epistemicRisksZh: ["認知卸載", "構想同質化", "所有權模糊"],
-    epistemicRisksEn: ["cognitive offloading", "idea homogenization", "blurred ownership"],
+    epistemicRisksZh: ["在自己名下擁有問題，卻未必真正理解", "構想同質化；依賴 AI 產生想法"],
+    epistemicRisksEn: ["owning questions one may not truly understand", "homogenized ideation; dependency on AI-generated ideas"],
     governanceResponsesZh: ["人保留篩選並獨立查文獻", "能重建為何某個問題值得做"],
     governanceResponsesEn: ["retain selection and independently check literature", "reconstruct why a question is worth pursuing"],
     ethicalIssuesZh: ["想法所有權", "未驗證新穎性", "brainstorming vs 接受 AI 主張"],
@@ -1450,8 +1483,8 @@ const QUESTIONS = [
 
     aiDelegationZh: "決定科學優先序／哪個假設最值得做",
     aiDelegationEn: "Deciding scientific priority / which hypothesis is most worth pursuing",
-    epistemicRisksZh: ["把發表潛力當成科學優劣", "失去對優先序的獨立判斷"],
-    epistemicRisksEn: ["treating publication potential as scientific merit", "loss of independent priority judgment"],
+    epistemicRisksZh: ["把優先序判斷卸載給 AI", "批判評估能力鈍化／依賴"],
+    epistemicRisksEn: ["offloading scientific prioritization", "dulling/dependency in evaluative judgment"],
     governanceResponsesZh: ["人重做優先序判斷", "明確自己的評價標準"],
     governanceResponsesEn: ["redo prioritization independently", "make evaluation criteria explicit"],
     ethicalIssuesZh: ["外包科學優先序", "以發表導向標準排序"],
@@ -1480,8 +1513,8 @@ const QUESTIONS = [
 
     aiDelegationZh: "文獻→選定機制→產生 hypotheses",
     aiDelegationEn: "Literature → mechanism selection → hypothesis generation",
-    epistemicRisksZh: ["失去對『證據到機制』推論的所有權", "過早收斂到看似合理的敘事"],
-    epistemicRisksEn: ["loss of ownership over evidence→mechanism inference", "premature convergence on a plausible narrative"],
+    epistemicRisksZh: ["對機制／hypotheses 的理解幻覺", "跳過證據合成 → produce more, understand less", "對 AI 推論鏈的依賴"],
+    epistemicRisksEn: ["illusion of understanding mechanism/hypotheses", "skipping synthesis: produce more, understand less", "dependency on AI’s inference chain"],
     governanceResponsesZh: ["原始文獻核對", "主動提出替代機制", "獨立重建推論", "claim accountability"],
     governanceResponsesEn: ["primary-source verification", "propose alternative mechanisms", "independent reconstruction", "claim accountability"],
     ethicalIssuesZh: ["未獨立核對即採納機制", "由 AI 建構 claim"],
@@ -1510,8 +1543,8 @@ const QUESTIONS = [
 
     aiDelegationZh: "在人已定機制下，決定如何用實驗檢驗",
     aiDelegationEn: "Deciding how to experimentally test a human-owned mechanism",
-    epistemicRisksZh: ["方法假設未受檢視", "人無法說明設計如何回答問題"],
-    epistemicRisksEn: ["unexamined methodological assumptions", "inability to explain how the design answers the question"],
+    epistemicRisksZh: ["方法理解幻覺：設計看起來合理但自己說不清", "方法推理卸載"],
+    epistemicRisksEn: ["methodological illusion: cannot explain the design", "offloading of design reasoning"],
     governanceResponsesZh: ["人獨立證成設計", "比較替代設計", "理解區辨邏輯"],
     governanceResponsesEn: ["independently justify the design", "compare alternative designs", "understand the discriminating logic"],
     ethicalIssuesZh: ["設計效度", "研究者是否理解設計"],
@@ -1540,8 +1573,8 @@ const QUESTIONS = [
 
     aiDelegationZh: "選擇統計模型與完整分析策略",
     aiDelegationEn: "Selecting the statistical model and full analysis strategy",
-    epistemicRisksZh: ["不適當模型", "隱藏假設", "無法證成分析橋樑"],
-    epistemicRisksEn: ["inappropriate model", "hidden assumptions", "inability to justify the inferential bridge"],
+    epistemicRisksZh: ["以為擁有 analysis plan，卻未真正掌握假設", "統計判斷依賴／鈍化"],
+    epistemicRisksEn: ["illusion of owning an analysis plan without mastering assumptions", "dependency/dulling in statistical judgment"],
     governanceResponsesZh: ["人證成模型選擇", "比較替代模型", "適時 preregister"],
     governanceResponsesEn: ["justify model choice", "compare alternatives", "preregister where appropriate"],
     ethicalIssuesZh: ["誰擁有 analysis plan", "未驗證時的 forking paths"],
@@ -1570,8 +1603,8 @@ const QUESTIONS = [
 
     aiDelegationZh: "多項方法決策 + 判斷哪些效果該報告",
     aiDelegationEn: "Multiple methodological decisions plus which effects to report",
-    epistemicRisksZh: ["researcher degrees of freedom", "選擇性報告滑向結果導向推理"],
-    epistemicRisksEn: ["researcher degrees of freedom", "selective reporting sliding into outcome-driven inference"],
+    epistemicRisksZh: ["多重卸載放大理解幻覺與 degrees of freedom", "對 AI 分析決策的依賴"],
+    epistemicRisksEn: ["multiple offloads amplify illusion of understanding", "dependency on AI analytic decisions"],
     governanceResponsesZh: ["預先約束關鍵決策", "分開探索與確認", "完整報告"],
     governanceResponsesEn: ["constrain key decisions in advance", "separate exploration from confirmation", "report comprehensively"],
     ethicalIssuesZh: ["自由度濫用", "選擇性報告", "結果導向選擇"],
@@ -1600,8 +1633,8 @@ const QUESTIONS = [
 
     aiDelegationZh: "由結果產生競爭解釋並提出可區辨分析（4C）",
     aiDelegationEn: "Generating competing explanations from results and discriminating analyses (4C)",
-    epistemicRisksZh: ["事後解釋變成方便敘事", "無法獨立評估解釋優劣"],
-    epistemicRisksEn: ["post-hoc explanation becoming a convenient narrative", "inability to independently evaluate explanations"],
+    epistemicRisksZh: ["事後解釋的理解幻覺", "批判區辨能力被流暢敘事削弱"],
+    epistemicRisksEn: ["illusion of understanding post-hoc explanations", "fluent narratives blunt discriminating critique"],
     governanceResponsesZh: ["保留多元解釋", "先設計區辨分析再下結論", "標示探索性質"],
     governanceResponsesEn: ["retain multiple explanations", "design discriminating analyses before concluding", "label exploratory status"],
     ethicalIssuesZh: ["事後詮釋", "需獨立評估解釋"],
@@ -1630,8 +1663,8 @@ const QUESTIONS = [
 
     aiDelegationZh: "搜尋可發表結果並事後重構 hypotheses／Discussion（4D）",
     aiDelegationEn: "Searching for publishable results and reconstructing hypotheses/Discussion (4D)",
-    epistemicRisksZh: ["確認偏誤", "敘事過度擬合", "無法區分探索與確認"],
-    epistemicRisksEn: ["confirmation bias", "narrative overfitting", "failure to distinguish exploration from confirmation"],
+    epistemicRisksZh: ["強烈理解幻覺：故事流暢但推論空洞", "認知卸載＋對 AI 敘事的依賴", "（與誠信風險重疊但不等同）"],
+    epistemicRisksEn: ["strong illusion of understanding a fluent but hollow story", "offloading + dependency on AI narrative", "(overlaps with integrity risks but is not identical)"],
     governanceResponsesZh: ["清楚標示探索分析", "保留原始 hypotheses", "preregistration", "透明報告"],
     governanceResponsesEn: ["clearly label exploratory analyses", "preserve original hypotheses", "preregistration", "transparent reporting"],
     ethicalIssuesZh: ["HARKing", "p-hacking", "選擇性報告", "結局導向說故事"],
@@ -1660,8 +1693,8 @@ const QUESTIONS = [
 
     aiDelegationZh: "依完整規格實作實驗與分析程式（科學決策已由人指定）",
     aiDelegationEn: "Implementing experiment/analysis code from a complete human specification",
-    epistemicRisksZh: ["程序理解流失", "隱藏實作錯誤", "自動化偏誤"],
-    epistemicRisksEn: ["loss of procedural understanding", "hidden implementation errors", "automation bias"],
+    epistemicRisksZh: ["程序理解幻覺：code 很多但未必懂", "實作技能卸載／習慣性依賴"],
+    epistemicRisksEn: ["procedural illusion despite large code volume", "offloading/habitual dependency in implementation"],
     governanceResponsesZh: ["程式檢查", "測試", "可重現", "研究者理解關鍵實作"],
     governanceResponsesEn: ["code inspection", "testing", "reproducibility", "researcher understanding of key implementation"],
     ethicalIssuesZh: ["程式可靠性", "盲目執行錯誤程式"],
@@ -1690,8 +1723,8 @@ const QUESTIONS = [
 
     aiDelegationZh: "由寬泛領域建構幾乎整條研究管線",
     aiDelegationEn: "Constructing nearly the full research pipeline from a broad domain",
-    epistemicRisksZh: ["認識依賴", "薄的 epistemic ownership", "難以重建研究為何存在"],
-    epistemicRisksEn: ["epistemic dependency", "thin epistemic ownership", "difficulty reconstructing why the research should exist"],
+    epistemicRisksZh: ["幾乎整條管線卸載 → 理解幻覺＋依賴", "工具拿掉後難以重建研究邏輯"],
+    epistemicRisksEn: ["near-full pipeline offload → illusion + dependency", "hard to reconstruct research logic without AI"],
     governanceResponsesZh: ["獨立評估 rationale", "重建邏輯", "挑戰假設與方法", "展示實質人類貢獻"],
     governanceResponsesEn: ["independently evaluate rationale", "reconstruct logic", "challenge hypotheses and methods", "demonstrate substantial human contribution"],
     ethicalIssuesZh: ["selector/approver 角色", "驗證負擔"],
@@ -1720,8 +1753,8 @@ const QUESTIONS = [
 
     aiDelegationZh: "自行決定主題並建構完整智識管線",
     aiDelegationEn: "Independently choosing the topic and constructing the full intellectual pipeline",
-    epistemicRisksZh: ["研究者自主性侵蝕", "無法獨立重建研究為何如此設計", "偏誤貫穿整條管線"],
-    epistemicRisksEn: ["erosion of researcher autonomy", "inability to reconstruct why the research is designed this way", "biases across the whole pipeline"],
+    epistemicRisksZh: ["AI 依賴最大化（習慣／情感）", "認識盲視與自主性侵蝕", "無法獨立辯護為何做此研究"],
+    epistemicRisksEn: ["maximal AI dependency (habitual/emotional)", "epistemic blindsight and eroded autonomy", "cannot independently defend why this research exists"],
     governanceResponsesZh: ["強化督導", "provenance", "獨立重建", "某些情境需額外揭露或限制委派"],
     governanceResponsesEn: ["strong oversight", "provenance", "independent reconstruction", "possible disclosure or limits in some settings"],
     ethicalIssuesZh: ["這是誰的研究", "能否辯護 claims", "epistemic ownership"],
@@ -2406,13 +2439,16 @@ function renderFourDimensions() {
       </div>
       <p style="font-size:1.08rem"><strong>這四個問題彼此相關，但不能互相取代。</strong></p>
       <div class="axis-note" style="margin-top:1rem">
+        <strong>Epistemic risk（依 Tang, 2025）— 與倫理違規分開</strong><br/>
+        即使沒有抄襲或造假，AI 使用仍可能帶來內在的認識代價：<br/>
+        1. <strong>Illusion of understanding</strong>｜理解幻覺：以為懂了、產出變多，理解卻變少<br/>
+        2. <strong>Cognitive dulling</strong>｜認知鈍化：卸載削弱批判思考、記憶與創造力（cognitive debt）<br/>
+        3. <strong>AI dependency</strong>｜依賴：習慣性／情感性依賴；沒有 AI 就難以獨立完成<br/><br/>
         <strong>討論關鍵訊息</strong><br/>
-        • 一種做法可以在倫理上可接受，但仍有認識／知識生產成本。<br/>
-        • 更高的 AI delegation 不自動等於更不道德。<br/>
-        • 治理應回應「委派任務所造成的 epistemic risk 類型」，而不是只禁止更密集的 AI 使用。<br/><br/>
-        <strong>Non-monotonicity｜非單調性：</strong>更高委派 ≠ 機械地等於更高實際認識風險。<br/>
-        例：Level 4 + 強獨立重建，可能比 Level 1 + 盲目接受 AI 文獻綜整，產出更可靠的學術工作。<br/>
-        因此：Level 描述委派的<strong>類型與範圍</strong>；Epistemic risk 描述可能出錯之處；Governance 描述如何緩解；Ethics 問規範可接受性。
+        • 倫理上可接受 ≠ 沒有認識成本<br/>
+        • 更高委派 ≠ 自動更不道德<br/>
+        • 治理要回應上述認識風險，而不只是禁止「用更多 AI」<br/><br/>
+        <strong>Non-monotonicity：</strong>Level 4 + 強獨立重建，可能比 Level 1 + 盲目接受 AI 綜整更可靠。
       </div>
     </div>`;
 }
@@ -2421,27 +2457,35 @@ function renderEpistemicCost() {
   return `
     <div class="panel">
       <h2>Academically acceptable ≠ Epistemically cost-free</h2>
-      <h3 style="margin:0 0 0.75rem">學術上可以接受 ≠ 沒有認知／知識生產成本</h3>
+      <h3 style="margin:0 0 0.5rem">學術上可以接受 ≠ 沒有認識成本</h3>
+      <p class="lead">依 Tang (2025) 對學術寫作中 LLM 使用的分析：倫理問題之外，還有三個相互關聯的 <strong>epistemic downsides</strong>。<br/>
+      <a href="https://doi.org/10.3390/publications13040063" target="_blank" rel="noopener">Tang, B. L. (2025). Publications, 13(4), 63</a></p>
+      <div class="four-grid">
+        ${TANG_EPISTEMIC.triad.map(t => `
+          <div class="four-box">
+            <h4>${escapeHtml(t.zh)}</h4>
+            <p>${escapeHtml(t.note_zh)}<br/><span style="opacity:.85">${escapeHtml(t.note_en)}</span></p>
+          </div>`).join("")}
+      </div>
       <div class="cost-card" data-action="open-question" data-qid="Q13">
-        <h4>Q13 · Level 2 Scientific Execution</h4>
-        <p>人完整指定實驗與分析；AI 產生大量程式。許多人可能判斷為可接受。</p>
-        <p><strong>可能的認識成本：</strong>程序理解流失、未被注意的實作錯誤。</p>
-        <p><strong>Governance：</strong>程式檢查 + 測試 + 可重現 + 研究者理解。</p>
-        <p style="color:var(--ink-muted);font-size:0.88rem">大量 AI 產出 ≠ 高度科學委派。</p>
+        <h4>Q13 · Level 2 — 執行看似可接受</h4>
+        <p>大量 code 仍可能是低委派。但 Tang 提醒：流暢產出可掩蓋<strong>程序理解幻覺</strong>與<strong>習慣性依賴</strong>。</p>
+        <p><strong>Governance：</strong>檢查／測試／可重現，並確認拿走 AI 後仍能解釋流程。</p>
       </div>
       <div class="cost-card" data-action="open-question" data-qid="Q7">
-        <h4>Q7 · Level 4 Scientific Reasoning</h4>
-        <p>AI 綜整文獻、選定機制並產生 hypotheses。</p>
-        <p><strong>可能的認識成本：</strong>失去對「證據 → 機制」推論的所有權。</p>
-        <p><strong>Governance：</strong>原始文獻核對 + 替代解釋 + 獨立重建 + claim accountability。</p>
+        <h4>Q7 · Level 4 — 推論被卸載</h4>
+        <p>AI 完成證據→機制→hypotheses。風險核心是<strong>理解幻覺</strong>：名下有 claim，卻未必真正掌握；並累積 cognitive debt。</p>
+        <p><strong>Governance：</strong>獨立重建推論、核對原始文獻、主動尋找替代解釋。</p>
       </div>
       <div class="cost-card" data-action="open-question" data-qid="Q12">
-        <h4>Q12 · Level 4D Outcome-driven reconstruction</h4>
-        <p>AI 在 null results 中尋找有趣敘事並重寫 hypotheses。</p>
-        <p><strong>Epistemic risks：</strong>確認偏誤、敘事過度擬合、無法區分探索與確認。</p>
-        <p><strong>Research-integrity concerns：</strong>HARKing、選擇性報告、未揭露的結局導向分析。</p>
-        <p><strong>Governance：</strong>標示探索分析、保留原始 hypotheses、preregistration、透明報告。</p>
-        <p style="font-weight:600">Epistemic risk 與 research-integrity risk 可以重疊，但並不相同。</p>
+        <h4>Q12 · Level 4D — 認識成本與誠信風險重疊但不等同</h4>
+        <p><strong>Epistemic（Tang）：</strong>流暢故事強化理解幻覺、卸載批判思考、依賴 AI 敘事。</p>
+        <p><strong>Integrity：</strong>HARKing、選擇性報告、結局導向改寫。</p>
+        <p style="font-weight:600">兩者可同時出現，但治理不能只用「禁不禁止 AI」來回答。</p>
+      </div>
+      <div class="cost-card" data-action="open-question" data-qid="Q15">
+        <h4>Q15 · Level 5 — 依賴與自主性</h4>
+        <p>Tang 的 <strong>AI dependency</strong>（習慣／情感）在此最明顯：若拿走 AI，還能否重建研究為何存在、為何如此設計？</p>
       </div>
     </div>`;
 }
