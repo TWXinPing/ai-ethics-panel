@@ -821,6 +821,111 @@ button:disabled {
   font-size: 0.92rem;
 }
 
+
+/* Four dimensions */
+.four-grid {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  margin: 1rem 0;
+}
+.four-box {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 0.9rem 1rem;
+  background: #fcfbf8;
+  border-top: 3px solid var(--accent);
+}
+.four-box h4 { margin: 0 0 0.4rem; font-size: 0.95rem; }
+.four-box p { margin: 0; font-size: 0.88rem; color: var(--ink-muted); }
+.dim-block {
+  margin: 0.75rem 0;
+  padding: 0.75rem 0.85rem;
+  border-radius: 10px;
+  background: #f4f7f5;
+  border: 1px solid #d5e4dc;
+  font-size: 0.9rem;
+}
+.dim-block .dim-title {
+  font-weight: 700;
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 0.35rem;
+}
+.summary-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+  margin: 1rem 0;
+}
+.summary-table th, .summary-table td {
+  border-bottom: 1px solid var(--line);
+  padding: 0.55rem 0.45rem;
+  text-align: left;
+  vertical-align: top;
+}
+.summary-table th {
+  background: #f0eee8;
+  font-size: 0.8rem;
+  position: sticky;
+  top: 0;
+}
+.summary-table tr.expandable { cursor: pointer; }
+.summary-table tr.expandable:hover { background: #f3f7f5; }
+.summary-table tr.detail-row td {
+  background: #faf9f6;
+  font-size: 0.84rem;
+  color: var(--ink-muted);
+}
+.risk-matrix-wrap {
+  position: relative;
+  height: 420px;
+  max-width: 720px;
+  margin: 0.5rem auto 1rem;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: linear-gradient(#fff, #f7f5f1);
+}
+.risk-matrix-wrap canvas { width: 100% !important; height: 100% !important; }
+.gov-stack {
+  display: grid;
+  gap: 0.55rem;
+  max-width: 720px;
+}
+.gov-layer {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 0.75rem 0.9rem;
+  background: #fff;
+  position: relative;
+}
+.gov-layer .cum {
+  font-size: 0.75rem;
+  color: var(--accent);
+  font-weight: 600;
+}
+.cost-card {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  background: #fcfbf8;
+}
+.ethics-banner {
+  background: var(--accent-soft);
+  border: 1px solid #c9ddd4;
+  border-radius: 12px;
+  padding: 0.85rem 1rem;
+  margin-bottom: 1rem;
+}
+.ethics-banner h2 {
+  font-family: var(--font-serif);
+  font-size: 1.15rem;
+  margin: 0 0 0.35rem;
+}
+
 /* Controversy */
 .stat-grid {
   display: grid;
@@ -984,16 +1089,25 @@ const CONFIG = {
   SUPABASE_URL: "",
   SUPABASE_ANON_KEY: "",
   SESSION_ID: "classroom-default",
-  STORAGE_KEY: "ai_ethics_classroom_v2",
+  STORAGE_KEY: "ai_ethics_classroom_v3",
   TABLE_NAME: "ai_ethics_responses"
 };
 
 const RESPONSE_LABELS = [
-  { value: 5, zh: "明顯可接受", en: "Clearly acceptable", color: "var(--r1)" },
-  { value: 4, zh: "大致可接受", en: "Probably acceptable", color: "var(--r2)" },
-  { value: 3, zh: "視情況 / 不確定", en: "Depends / uncertain", color: "var(--r3)" },
-  { value: 2, zh: "大致不可接受", en: "Probably unacceptable", color: "var(--r4)" },
-  { value: 1, zh: "明顯不可接受", en: "Clearly unacceptable", color: "var(--r5)" }
+  { value: 5, zh: "明確可以接受", en: "Clearly acceptable", color: "var(--r1)" },
+  { value: 4, zh: "大致可以接受", en: "Probably acceptable", color: "var(--r2)" },
+  { value: 3, zh: "視情況而定／不確定", en: "Depends / uncertain", color: "var(--r3)" },
+  { value: 2, zh: "大致不能接受", en: "Probably unacceptable", color: "var(--r4)" },
+  { value: 1, zh: "明確不能接受", en: "Clearly unacceptable", color: "var(--r5)" }
+];
+
+const GOVERNANCE_LAYERS = [
+  { id: "verification", zh: "Verification｜核對驗證", en: "Verification", note_zh: "核對解釋、技術定義與關鍵主張", note_en: "Check explanations, technical definitions, and key claims" },
+  { id: "traceability", zh: "Source Traceability｜來源可追溯", en: "Source Traceability", note_zh: "回到原始文獻，保留檢索／引用軌跡", note_en: "Return to primary sources; keep retrieval/citation trails" },
+  { id: "validation", zh: "Validation & Reproducibility｜驗證與可重現", en: "Validation & Reproducibility", note_zh: "檢查程式、測試輸出、保留可重現腳本", note_en: "Inspect code, test outputs, preserve reproducible scripts" },
+  { id: "method_justification", zh: "Methodological Justification｜方法證成", en: "Methodological Justification", note_zh: "人能獨立說明為何此方法回答此問題", note_en: "Humans can independently justify why the method answers the question" },
+  { id: "claim_accountability", zh: "Claim Accountability｜主張可問責", en: "Claim Accountability", note_zh: "重建推論、尋找反證、辯護 claim", note_en: "Reconstruct reasoning, seek counterevidence, defend the claim" },
+  { id: "strong_oversight", zh: "Strong Oversight & Reconstruction｜強化督導與獨立重建", en: "Strong Oversight & Independent Reconstruction", note_zh: "保留 provenance、展示實質人類智識貢獻", note_en: "Maintain provenance and demonstrate substantial human intellectual contribution" }
 ];
 
 const LEVEL_META = [
@@ -1001,94 +1115,166 @@ const LEVEL_META = [
     level: 0,
     name_zh: "知識支援",
     name_en: "Knowledge Support",
-    core_zh: "「這是什麼意思？」",
+    title: "AI Scientific Reasoning Delegation",
+    core_zh: "「這個概念是什麼意思？」",
     core_en: "“What does this mean?”",
-    desc_zh: "AI 協助理解既有概念、術語、理論、方法或背景知識。人類並未要求 AI 做出具後果性的研究決策。",
-    desc_en: "AI helps the researcher understand established concepts, terminology, theories, methods, or background knowledge. The human is not asking AI to make a consequential research decision.",
-    human_zh: "人：決定要理解什麼，並自行決定如何用於研究",
-    ai_zh: "AI：解釋、比較既有概念、tutoring",
-    example_zh: "例：「Impedance control 是什麼意思？請用 motor learning 的例子解釋。」",
-    boundary_zh: "若 AI 開始挑選文獻或決定哪些證據重要，則朝 Level 1 移動。",
-    subtypes: null
+    aiDelegation_zh: "AI 解釋既有概念、術語、方法或理論。研究者委派的是解釋與 tutoring，而非具後果性的科學決策。",
+    aiDelegation_en: "AI explains established concepts, terminology, methods, or theories. The researcher delegates explanation and tutoring, not consequential scientific decision-making.",
+    aiDelegationShort_zh: "解釋／tutoring",
+    aiDelegationShort_en: "Explanation",
+    epistemicRisk_zh: "錯誤資訊與理解幻覺（misinformation and illusion of understanding）",
+    epistemicRisk_en: "Misinformation and illusion of understanding",
+    epistemicRiskShort_zh: "錯誤資訊／理解幻覺",
+    epistemicRiskShort_en: "Misinformation / illusion of understanding",
+    epistemicRiskDetails_zh: ["接受錯誤解釋", "過度簡化", "誤解技術概念", "把流暢說明誤認為真正理解", "以為懂了卻無法獨立應用或重述"],
+    epistemicRiskDetails_en: ["accepting incorrect explanations", "oversimplification", "misunderstanding technical concepts", "mistaking fluency for understanding", "believing one understands without independent application"],
+    governance_zh: "核對驗證與主動理解（Verification and active understanding）",
+    governance_en: "Verification and active understanding",
+    governanceShort_zh: "核對驗證",
+    governanceShort_en: "Verification",
+    governanceDetails_zh: ["與權威來源比對重要解釋", "檢查技術定義", "嘗試獨立重述概念", "不因語言流暢就接受陌生主張"],
+    governanceDetails_en: ["compare explanations with authoritative sources", "check technical definitions", "explain the concept independently", "verify unfamiliar claims rather than relying on fluency"],
+    examples_zh: ["解釋 impedance control", "解釋 Bayesian inference", "比較既有理論", "解釋統計概念"],
+    examples_en: ["explaining impedance control", "explaining Bayesian inference", "comparing established theories", "explaining a statistical concept"],
+    subtypes: null,
+    exampleQs: ["Q1", "Q2"]
   },
   {
     level: 1,
     name_zh: "證據支援",
     name_en: "Evidence Support",
-    core_zh: "「既有證據說了什麼？」",
+    core_zh: "「目前的證據到底說了什麼？」",
     core_en: "“What does the existing evidence say?”",
-    desc_zh: "研究者已決定主題、現象或科學問題；AI 協助檢索、整理、摘要、比較或批判性綜整既有證據。AI 可能影響你看到哪些證據，因此比單純解釋更具認識論後果；但尚未決定 hypothesis、實驗或統計結論。",
-    desc_en: "The researcher has determined the topic, phenomenon, or scientific question. AI helps retrieve, organize, summarize, compare, or critically synthesize existing evidence. AI may influence which evidence is seen, but should not yet decide the hypothesis, experiment, or statistical conclusion.",
-    human_zh: "人：已決定主題／現象／科學問題",
-    ai_zh: "AI：文獻搜尋、摘要、證據表、方法差異比較、文獻地圖",
-    example_zh: "例：依支持／無效果／其他解釋整理 environmental uncertainty 與 motor learning 文獻",
-    boundary_zh: "「摘要文獻並指出未解不一致」可仍屬 Level 1；「據此決定我該檢定哪個 hypothesis」則朝 Level 4 移動。",
-    subtypes: null
+    aiDelegation_zh: "AI 檢索、整理、摘要、比較或綜整既有證據。研究者委派的是部分證據導航過程。",
+    aiDelegation_en: "AI retrieves, organizes, summarizes, compares, or synthesizes existing evidence. The researcher delegates part of the evidence-navigation process.",
+    aiDelegationShort_zh: "證據導航",
+    aiDelegationShort_en: "Evidence navigation",
+    epistemicRisk_zh: "被扭曲的證據視野（distorted evidence landscape）",
+    epistemicRisk_en: "Distorted evidence landscape",
+    epistemicRiskShort_zh: "被扭曲的證據視野",
+    epistemicRiskShort_en: "Distorted evidence landscape",
+    epistemicRiskDetails_zh: ["捏造引用", "遺漏重要文獻", "選擇性檢索", "過度代表易取得或高被引文獻", "少數／矛盾觀點消失", "文獻同質化", "AI 引入的隱藏選文偏誤"],
+    epistemicRiskDetails_en: ["fabricated citations", "missing important literature", "selective retrieval", "overrepresentation of accessible/highly cited work", "loss of minority or contradictory perspectives", "literature homogenization", "hidden selection bias"],
+    governance_zh: "來源可追溯與原始文獻核對（Source traceability and primary-source verification）",
+    governance_en: "Source traceability and primary-source verification",
+    governanceShort_zh: "來源可追溯",
+    governanceShort_en: "Source traceability",
+    governanceDetails_zh: ["回到原始文獻", "核對引用", "必要時記錄檢索決策", "主動尋找矛盾證據", "不把 AI 文獻摘要當成窮盡", "維持主張與原始來源的可追溯性"],
+    governanceDetails_en: ["return to primary sources", "verify citations", "document search decisions where appropriate", "actively seek contradictory evidence", "avoid treating AI summaries as exhaustive", "maintain claim–source traceability"],
+    examples_zh: ["文獻搜尋", "結構化摘要", "支持／矛盾發現比較", "方法差異整理", "證據表"],
+    examples_en: ["literature search", "structured summaries", "comparing supporting vs contradictory findings", "methodological differences", "evidence tables"],
+    subtypes: null,
+    exampleQs: ["Q2", "Q3", "Q4"]
   },
   {
     level: 2,
     name_zh: "科學執行",
     name_en: "Scientific Execution",
-    core_zh: "「我已知道該做什麼。AI 能否執行？」",
+    core_zh: "「我已經知道該做什麼，可以讓 AI 幫我執行嗎？」",
     core_en: "“I know what should be done. Can AI execute it?”",
-    desc_zh: "研究者已做出具後果性的科學決策；AI 負責實作或執行。大量產出 ≠ 高度科學委派：即使 AI 產生上千行程式，只要科學決策已由人指定，仍可屬 Level 2。",
-    desc_en: "The researcher has already made the consequential scientific decisions; AI performs implementation or execution. Large AI output does not imply high scientific delegation.",
-    human_zh: "人：已決定 hypothesis、設計、DV、分析規格等",
-    ai_zh: "AI：依完整 specification 寫程式、轉譯 preregistered model、依既定規則整理資料／畫圖／除錯",
-    example_zh: "例：trial structure 與 preregistered analysis 已定 → 產生 PsychoPy 與 R/Python code",
-    boundary_zh: "若 AI 必須決定 model、exclusion、DV 或 experimental manipulation，則朝 Level 3 移動。",
-    subtypes: ["Implementation from complete specification"]
+    aiDelegation_zh: "人已做出具後果性的科學決策；AI 負責實作。大量 AI 程式 ≠ 高度科學委派。",
+    aiDelegation_en: "The human has already made the consequential scientific decisions; AI performs implementation. Large amounts of AI-generated code do not necessarily imply high scientific delegation.",
+    aiDelegationShort_zh: "實作／執行",
+    aiDelegationShort_en: "Implementation",
+    epistemicRisk_zh: "缺乏程序理解的執行（execution without procedural understanding）",
+    epistemicRisk_en: "Execution without procedural understanding",
+    epistemicRiskShort_zh: "程序不透明／自動化錯誤",
+    epistemicRiskShort_en: "Procedural opacity / automation error",
+    epistemicRiskDetails_zh: ["隱藏程式錯誤", "靜默改變實作", "不正確預設值", "自動化偏誤", "無法理解或重現工作流程", "依賴自己無法檢查的工具"],
+    epistemicRiskDetails_en: ["hidden coding errors", "silent implementation changes", "incorrect defaults", "automation bias", "inability to understand/reproduce the workflow", "dependence on unauditable tools"],
+    governance_zh: "驗證、可重現與程序理解（Validation, reproducibility, and procedural understanding）",
+    governance_en: "Validation, reproducibility, and procedural understanding",
+    governanceShort_zh: "驗證與可重現",
+    governanceShort_en: "Validation & reproducibility",
+    governanceDetails_zh: ["檢查產生的程式", "測試預期行為", "可用模擬／已知資料驗證", "獨立核對關鍵輸出", "保留可重現腳本", "理解關鍵實作選擇", "不執行無法解釋或稽核的程式"],
+    governanceDetails_en: ["inspect generated code", "test expected behavior", "use simulated/known data where possible", "verify critical outputs", "preserve reproducible scripts", "understand key implementation choices", "avoid running unauditable code"],
+    examples_zh: ["依完整規格寫 PsychoPy", "轉譯 preregistered model", "依既定規則清理資料", "除錯分析程式"],
+    examples_en: ["PsychoPy from complete specification", "translate preregistered model", "data wrangling by fixed rules", "debugging analysis code"],
+    subtypes: ["Implementation from complete specification"],
+    exampleQs: ["Q13"]
   },
   {
     level: 3,
     name_zh: "科學方法判斷",
     name_en: "Methodological Judgment",
-    core_zh: "「AI 能否決定我該如何檢驗或分析這個問題？」",
+    core_zh: "「可以讓 AI 決定這個問題應該怎麼檢驗或分析嗎？」",
     core_en: "“Can AI decide how I should test or analyze the question?”",
-    desc_zh: "研究者擁有科學問題或 hypothesis，但把具後果性的方法決策委派給 AI——例如操作型定義、操弄、DV、統計模型、exclusion、outliers、樣本數策略等。這不只是執行，因為 AI 在決定證據應如何被產生或評估。",
-    desc_en: "The researcher owns the scientific question or hypothesis, but delegates consequential methodological decisions to AI—operationalization, manipulation, DVs, statistical model, exclusion, outliers, sample-size strategy, and so on.",
-    human_zh: "人：擁有問題／hypothesis（及部分前提）",
-    ai_zh: "AI：決定如何檢驗或如何分析",
-    example_zh: "例：人已有機制假設 → AI 設計可區辨實驗；或人已定條件與 outcome → AI 選 statistical model",
-    boundary_zh: "若 AI 開始決定該主張什麼、該推論什麼或該改寫 hypothesis，則朝 Level 4 移動。",
-    subtypes: [
-      "實驗設計判斷",
-      "分析策略／模型選擇",
-      "測量與 exclusion 等操作決策"
-    ]
+    aiDelegation_zh: "研究者擁有科學問題或 hypothesis，但 AI 協助決定如何檢驗或分析。",
+    aiDelegation_en: "The researcher owns the scientific question or hypothesis, but AI helps decide how the question should be tested or analyzed.",
+    aiDelegationShort_zh: "如何檢驗／分析",
+    aiDelegationShort_en: "How to test/analyze",
+    epistemicRisk_zh: "未經檢視的方法假設（unexamined methodological assumptions）",
+    epistemicRisk_en: "Unexamined methodological assumptions",
+    epistemicRiskShort_zh: "未經檢視的方法假設",
+    epistemicRiskShort_en: "Unexamined methodological assumptions",
+    epistemicRiskDetails_zh: ["不適當模型選擇", "無效操作型定義", "隱藏假設", "未被辨識的 researcher degrees of freedom", "因方便結果而選方法", "無法說明為何此方法回答此問題"],
+    epistemicRiskDetails_en: ["inappropriate model choice", "invalid operationalization", "hidden assumptions", "unrecognized researcher degrees of freedom", "methods chosen for convenient outcomes", "inability to justify why a method answers the question"],
+    governance_zh: "人類的方法證成（Human methodological justification）",
+    governance_en: "Human methodological justification",
+    governanceShort_zh: "方法證成",
+    governanceShort_en: "Human methodological justification",
+    governanceDetails_zh: ["獨立證成重大方法選擇", "理解假設", "比較合理替代方案", "適時 preregister", "必要時尋求專家審查", "記錄方法為何適配研究問題"],
+    governanceDetails_en: ["independently justify major methodological choices", "understand assumptions", "compare reasonable alternatives", "preregister where appropriate", "seek expert review when needed", "document why the method fits the question"],
+    examples_zh: ["選擇實驗操弄", "操作型定義", "選 DV", "選統計模型", "exclusion／outlier／樣本數策略"],
+    examples_en: ["choosing manipulations", "operationalizing constructs", "selecting DVs", "choosing statistical models", "exclusion/outlier/sample-size strategies"],
+    subtypes: ["實驗設計判斷", "分析策略／模型選擇", "測量與 exclusion 等操作決策"],
+    exampleQs: ["Q8", "Q9", "Q10"]
   },
   {
     level: 4,
     name_zh: "科學推理",
     name_en: "Scientific Reasoning",
-    core_zh: "「AI 能否決定我該假設、推論或結論什麼？」",
+    core_zh: "「可以讓 AI 決定我應該提出什麼 hypothesis、做出什麼 inference 或 conclusion 嗎？」",
     core_en: "“Can AI decide what I should hypothesize, infer, or conclude?”",
-    desc_zh: "AI 直接參與產生科學主張的概念推理：Evidence → inference → claim。這關乎 claim accountability。Level 4 不自動等於不道德——例如發散式產生 hypotheses 後由人獨立驗證，與接受 AI 選定故事，倫理意涵可能不同。",
-    desc_en: "AI participates directly in the conceptual reasoning that produces scientific claims: evidence → inference → claim. This level is especially relevant to claim accountability. Level 4 is not automatically unethical.",
-    human_zh: "人：可能提供領域興趣、現象或結果，但關鍵推論／主張由 AI 形成",
-    ai_zh: "AI：由證據／理論導出 hypothesis、機制、解釋或研究敘事",
-    example_zh: "例：由文獻選定機制並產生 hypotheses；或由結果建構科學解釋",
-    boundary_zh: "若人只給寬泛主題、AI 建構整條研究管線，則朝 Level 5 移動。",
-    subtypes: [
-      "4A Hypothesis generation：證據／理論 → hypothesis",
-      "4B Theoretical inference：證據 → 機制／解釋",
-      "4C Result interpretation：結果 → 科學解釋",
-      "4D Outcome-driven reconstruction：結果 → 改寫 hypothesis／故事（HARKing 風險）"
-    ]
+    aiDelegation_zh: "AI 直接參與產生科學推論或主張（evidence → inference → claim）。",
+    aiDelegation_en: "AI participates directly in generating scientific inference or claims (evidence → inference → claim).",
+    aiDelegationShort_zh: "推論／主張什麼",
+    aiDelegationShort_en: "What to infer/claim",
+    epistemicRisk_zh: "認識論所有權流失（loss of epistemic ownership）",
+    epistemicRisk_en: "Loss of epistemic ownership",
+    epistemicRiskShort_zh: "認識論所有權流失",
+    epistemicRiskShort_en: "Loss of epistemic ownership",
+    epistemicRiskDetails_zh: ["認知卸載", "確認偏誤", "過早收斂到看似合理的敘事", "科學構想同質化", "無法重建 claim 如何得出", "無法區分證據與 AI 生成的合理性", "獨立批判推理被侵蝕", "接受自己無法辯護的解釋"],
+    epistemicRiskDetails_en: ["cognitive offloading", "confirmation bias", "premature narrative convergence", "homogenization of ideas", "inability to reconstruct how a claim was derived", "inability to distinguish evidence from AI plausibility", "erosion of independent critical reasoning", "accepting undefendable explanations"],
+    governance_zh: "主張可問責與對抗式驗證（Claim accountability and adversarial verification）",
+    governance_en: "Claim accountability and adversarial verification",
+    governanceShort_zh: "主張可問責",
+    governanceShort_en: "Claim accountability",
+    governanceDetails_zh: ["指出支持證據", "重建由證據到推論的推理", "獨立核對關鍵來源", "說明為何排除替代解釋", "主動尋找反證", "能在 reviewer challenge 下辯護", "對最終 claim 承擔可識別的人類責任"],
+    governanceDetails_en: ["identify supporting evidence", "reconstruct reasoning from evidence to inference", "independently verify critical sources", "explain why alternatives were rejected", "actively seek counterarguments", "defend under reviewer challenge", "take identifiable human responsibility"],
+    examples_zh: ["由文獻導出 hypotheses", "指出機制", "由 gap 產生研究問題", "解釋未預期結果", "在理論解釋間選擇", "事後重構 hypotheses"],
+    examples_en: ["deriving hypotheses from literature", "identifying mechanisms", "questions from gaps", "interpreting unexpected findings", "selecting among explanations", "restructuring hypotheses after results"],
+    subtypes: ["4A Hypothesis Generation", "4B Theoretical Inference", "4C Result Interpretation", "4D Outcome-driven Reconstruction"],
+    exampleQs: ["Q5", "Q6", "Q7", "Q11", "Q12"],
+    extraNote_zh: "Verification 必要，但可能不足：研究者不只要確認 AI 主張「看起來合理」，還要能說明為何該主張被證成。",
+    extraNote_en: "Verification is necessary but may not be sufficient: researchers should account for why a claim is justified, not merely that it appears valid."
   },
   {
     level: 5,
     name_zh: "自主研究生成",
     name_en: "Autonomous Research Generation",
-    core_zh: "「AI 能否決定我該做什麼研究？」",
+    core_zh: "「可以讓 AI 決定我應該做什麼研究嗎？」",
     core_en: "“Can AI decide what research I should do?”",
-    desc_zh: "研究者只提供寬泛主題、目標或個人脈絡；AI 建構大部分或全部智識研究管線。人主要挑選、核准或執行 AI 計畫。核心問題：這是誰的研究？誰擁有 epistemic ownership 並能辯護其 claims？",
-    desc_en: "The researcher provides only a broad topic, goal, or personal context; AI constructs most or all of the intellectual research pipeline. The researcher mainly selects, approves, or executes the AI-generated plan.",
-    human_zh: "人：寬泛目標／身份脈絡；挑選或核准",
-    ai_zh: "AI：主題→文獻→gap→理論→問題→hypotheses→設計→分析→預期結果",
-    example_zh: "例：請 AI 自行決定主題並產出可執行、可能發表的完整研究計畫",
-    boundary_zh: null,
-    subtypes: null
+    aiDelegation_zh: "人只提供寬泛主題／興趣／目標；AI 建構大部分智識研究管線。人主要挑選、核准或執行。",
+    aiDelegation_en: "The human provides only a broad topic, interest, or goal; AI constructs most of the intellectual research pipeline. The researcher mainly selects, approves, or executes.",
+    aiDelegationShort_zh: "該做什麼研究",
+    aiDelegationShort_en: "What research to conduct",
+    epistemicRisk_zh: "認識依賴與研究者自主性侵蝕（epistemic dependency and erosion of researcher autonomy）",
+    epistemicRisk_en: "Epistemic dependency and erosion of researcher autonomy",
+    epistemicRiskShort_zh: "認識依賴／自主性流失",
+    epistemicRiskShort_en: "Epistemic dependency / loss of autonomy",
+    epistemicRiskDetails_zh: ["智識所有權流失", "技能退化", "無法獨立提出研究問題", "偏誤貫穿整條管線", "依賴 AI 生成的研究議程", "研究問題同質化", "人機判斷邊界不清", "難以展示真實認識貢獻"],
+    epistemicRiskDetails_en: ["loss of intellectual ownership", "deskilling", "inability to independently formulate questions", "systemic biases across the pipeline", "dependence on AI-generated agendas", "homogenization of research questions", "unclear human–machine boundary", "difficulty demonstrating epistemic contribution"],
+    governance_zh: "強化人類督導、provenance、獨立重建；某些情境可能需要額外揭露或限制委派——但禁止不是 Level 5 的自動後果。",
+    governance_en: "Strong human oversight, provenance, independent reconstruction; some settings may warrant disclosure or limits—but prohibition is not an automatic consequence of Level 5.",
+    governanceShort_zh: "強化督導與獨立重建",
+    governanceShort_en: "Strong oversight & independent reconstruction",
+    governanceDetails_zh: ["獨立評估 rationale", "重建科學邏輯", "核對證據基礎", "挑戰生成的 hypotheses", "證成方法決策", "保留重要智識選擇的 provenance", "展示實質人類智識貢獻", "保留對研究方向的最終責任"],
+    governanceDetails_en: ["independently evaluate the rationale", "reconstruct the scientific logic", "verify the evidence base", "challenge generated hypotheses", "justify methodological decisions", "maintain provenance of intellectual choices", "demonstrate substantial human contribution", "retain final responsibility for research direction"],
+    examples_zh: ["自行決定主題並產出完整可執行／可能發表的研究計畫"],
+    examples_en: ["independently choosing a topic and producing a full executable/publishable plan"],
+    subtypes: null,
+    exampleQs: ["Q14", "Q15"]
   }
 ];
 
@@ -1107,7 +1293,16 @@ const QUESTIONS = [
     branch: "Level 0",
     humanContribution: "決定要理解哪個概念；尚未要求任何研究決策",
     aiDelegation: "解釋既有術語與舉例",
-    ethicalIssues: ["accuracy of explanation", "over-reliance as textbook"],
+
+    aiDelegationZh: "委派概念解釋與 tutoring，不委派研究決策",
+    aiDelegationEn: "Delegates concept explanation/tutoring, not research decisions",
+    epistemicRisksZh: ["錯誤或過度簡化的解釋", "流暢說明造成的理解幻覺"],
+    epistemicRisksEn: ["incorrect or oversimplified explanations", "illusion of understanding from fluent text"],
+    governanceResponsesZh: ["與權威來源比對", "嘗試獨立重述概念"],
+    governanceResponsesEn: ["compare with authoritative sources", "attempt independent restatement"],
+    ethicalIssuesZh: ["解釋是否正確", "是否過度依賴 AI 當教科書"],
+    ethicalIssuesEn: ["accuracy of explanation", "over-reliance as textbook"],
+    epistemicRiskScore: 1.5,
     claimAccountabilityRisk: "low",
     rationale_zh: "人類只要求理解既有知識，未委派具後果性的科學決策。",
     rationale_en: "The human asks only for understanding of established knowledge; no consequential scientific decision is delegated.",
@@ -1128,7 +1323,16 @@ const QUESTIONS = [
     branch: "Level 0–1 boundary",
     humanContribution: "決定要比較哪些既有概念；保留研究假設選擇權",
     aiDelegation: "概念比較，並策展／推薦經典文獻",
-    ethicalIssues: ["selection bias in recommended readings", "incomplete coverage"],
+
+    aiDelegationZh: "概念比較 + 開始策展／推薦文獻",
+    aiDelegationEn: "Concept comparison plus beginning literature curation",
+    epistemicRisksZh: ["推薦清單的選文偏誤", "覆蓋不完整"],
+    epistemicRisksEn: ["selection bias in recommended readings", "incomplete coverage"],
+    governanceResponsesZh: ["核對經典文獻是否真的關鍵", "自行擴充檢索"],
+    governanceResponsesEn: ["verify that recommended classics are truly central", "expand the search independently"],
+    ethicalIssuesZh: ["選文偏誤", "覆蓋不足"],
+    ethicalIssuesEn: ["selection bias", "incomplete coverage"],
+    epistemicRiskScore: 2.0,
     claimAccountabilityRisk: "low-to-moderate",
     rationale_zh: "同時包含概念解釋（L0）與文獻策展（L1），是刻意的邊界題。",
     rationale_en: "Combines concept explanation (L0) with literature curation (L1)—an intentional boundary case.",
@@ -1149,7 +1353,16 @@ const QUESTIONS = [
     branch: "Level 1",
     humanContribution: "已決定科學問題／現象",
     aiDelegation: "檢索、分類與綜整既有證據",
-    ethicalIssues: ["selection bias", "missing contradictory evidence", "citation accuracy"],
+
+    aiDelegationZh: "在已定問題下進行證據導航與分類綜整",
+    aiDelegationEn: "Evidence navigation and classified synthesis under a fixed question",
+    epistemicRisksZh: ["被扭曲的證據視野", "捏造或錯誤引用", "矛盾證據被稀釋"],
+    epistemicRisksEn: ["distorted evidence landscape", "fabricated/incorrect citations", "dilution of contradictory evidence"],
+    governanceResponsesZh: ["回到原始文獻", "主動尋找矛盾證據", "不把摘要當成窮盡"],
+    governanceResponsesEn: ["return to primary sources", "actively seek contradictory evidence", "do not treat summaries as exhaustive"],
+    ethicalIssuesZh: ["引用正確性", "選文偏誤"],
+    ethicalIssuesEn: ["citation accuracy", "selection bias"],
+    epistemicRiskScore: 2.6,
     claimAccountabilityRisk: "moderate",
     rationale_zh: "人定義問題；AI 綜整證據，但尚未決定假設或方法。",
     rationale_en: "Human defines the question; AI synthesizes evidence without deciding hypotheses or methods.",
@@ -1171,7 +1384,16 @@ const QUESTIONS = [
     branch: "Level 1↔4 bridge",
     humanContribution: "限定文獻領域；保留最終选题與假設決定權",
     aiDelegation: "判斷什麼算「重要且未充分回答的 gap」——已涉及科學詮釋",
-    ethicalIssues: ["whose judgment defines a gap", "novelty claims without verification"],
+
+    aiDelegationZh: "判斷什麼算重要 research gap（介於證據整理與科學詮釋）",
+    aiDelegationEn: "Judging what counts as an important research gap (between evidence work and scientific interpretation)",
+    epistemicRisksZh: ["以 AI 的『重要性』判斷取代研究者判斷", "新穎性宣稱未經核對"],
+    epistemicRisksEn: ["AI importance judgments replacing researcher judgment", "unverified novelty claims"],
+    governanceResponsesZh: ["人獨立評估 gap 是否真的重要", "核對文獻基礎後再形成問題"],
+    governanceResponsesEn: ["independently evaluate whether gaps truly matter", "form questions only after checking the evidence base"],
+    ethicalIssuesZh: ["誰定義 gap", "新穎性宣稱"],
+    ethicalIssuesEn: ["whose judgment defines a gap", "novelty claims"],
+    epistemicRiskScore: 3.2,
     claimAccountabilityRisk: "moderate",
     rationale_zh: "文獻整理屬 Level 1，但認定「有意義的 research gap」已涉及科學詮釋，靠近 Level 4。此題刻意跨非相鄰層級。",
     rationale_en: "Literature synthesis is Level 1, but identifying a meaningful research gap already involves scientific interpretation toward Level 4. Intentionally non-adjacent bridge.",
@@ -1192,7 +1414,16 @@ const QUESTIONS = [
     branch: "Level 4A",
     humanContribution: "只提供領域興趣；保留事後篩選權",
     aiDelegation: "產生可能的科學問題／hypotheses（潛在 claims）",
-    ethicalIssues: ["ownership of ideas", "unverified novelty", "brainstorming vs accepting AI claims"],
+
+    aiDelegationZh: "產生潛在研究問題／hypotheses（4A）",
+    aiDelegationEn: "Generating potential research questions/hypotheses (4A)",
+    epistemicRisksZh: ["認知卸載", "構想同質化", "所有權模糊"],
+    epistemicRisksEn: ["cognitive offloading", "idea homogenization", "blurred ownership"],
+    governanceResponsesZh: ["人保留篩選並獨立查文獻", "能重建為何某個問題值得做"],
+    governanceResponsesEn: ["retain selection and independently check literature", "reconstruct why a question is worth pursuing"],
+    ethicalIssuesZh: ["想法所有權", "未驗證新穎性", "brainstorming vs 接受 AI 主張"],
+    ethicalIssuesEn: ["ownership of ideas", "unverified novelty", "brainstorming vs accepting AI claims"],
+    epistemicRiskScore: 3.2,
     claimAccountabilityRisk: "moderate",
     rationale_zh: "即使是 brainstorming，AI 仍在生成潛在科學主張／問題，故屬 Level 4A；人保留篩選會改變倫理意涵，但不降低委派層級本身。",
     rationale_en: "Even as brainstorming, AI generates potential scientific claims/questions (4A). Human selection changes ethical implications but not the delegation level itself.",
@@ -1213,7 +1444,16 @@ const QUESTIONS = [
     branch: "Level 4 · prioritization",
     humanContribution: "已產生候選 hypotheses",
     aiDelegation: "決定科學優先序／哪個假設最值得做",
-    ethicalIssues: ["outsourcing scientific priority", "publication-driven criteria"],
+
+    aiDelegationZh: "決定科學優先序／哪個假設最值得做",
+    aiDelegationEn: "Deciding scientific priority / which hypothesis is most worth pursuing",
+    epistemicRisksZh: ["把發表潛力當成科學優劣", "失去對優先序的獨立判斷"],
+    epistemicRisksEn: ["treating publication potential as scientific merit", "loss of independent priority judgment"],
+    governanceResponsesZh: ["人重做優先序判斷", "明確自己的評價標準"],
+    governanceResponsesEn: ["redo prioritization independently", "make evaluation criteria explicit"],
+    ethicalIssuesZh: ["外包科學優先序", "以發表導向標準排序"],
+    ethicalIssuesEn: ["outsourcing scientific priority", "publication-driven ranking"],
+    epistemicRiskScore: 3.6,
     claimAccountabilityRisk: "moderate-to-high",
     rationale_zh: "人產生假設，但 AI 決定科學優先序——這是對「該追哪個 claim」的推理委派。",
     rationale_en: "Humans generated the hypotheses, but AI decides scientific priority—delegation of which claim to pursue.",
@@ -1234,7 +1474,16 @@ const QUESTIONS = [
     branch: "Level 4A/4B",
     humanContribution: "只提供粗略現象／方向",
     aiDelegation: "文獻綜整 → 選定機制 → 產生 hypotheses",
-    ethicalIssues: ["mechanism selection without independent verification", "claim construction by AI"],
+
+    aiDelegationZh: "文獻→選定機制→產生 hypotheses",
+    aiDelegationEn: "Literature → mechanism selection → hypothesis generation",
+    epistemicRisksZh: ["失去對『證據到機制』推論的所有權", "過早收斂到看似合理的敘事"],
+    epistemicRisksEn: ["loss of ownership over evidence→mechanism inference", "premature convergence on a plausible narrative"],
+    governanceResponsesZh: ["原始文獻核對", "主動提出替代機制", "獨立重建推論", "claim accountability"],
+    governanceResponsesEn: ["primary-source verification", "propose alternative mechanisms", "independent reconstruction", "claim accountability"],
+    ethicalIssuesZh: ["未獨立核對即採納機制", "由 AI 建構 claim"],
+    ethicalIssuesEn: ["adopting mechanisms without independent verification", "AI-constructed claims"],
+    epistemicRiskScore: 4.0,
     claimAccountabilityRisk: "high",
     rationale_zh: "AI 完成 evidence → mechanism → hypothesis，明顯超過證據支援，屬科學推理。",
     rationale_en: "AI performs evidence → mechanism → hypothesis; clearly beyond evidence support.",
@@ -1255,7 +1504,16 @@ const QUESTIONS = [
     branch: "Level 3",
     humanContribution: "擁有現象 + 候選機制／理論主張",
     aiDelegation: "決定如何用實驗檢驗該機制（方法判斷）",
-    ethicalIssues: ["design validity", "researcher understanding of the design"],
+
+    aiDelegationZh: "在人已定機制下，決定如何用實驗檢驗",
+    aiDelegationEn: "Deciding how to experimentally test a human-owned mechanism",
+    epistemicRisksZh: ["方法假設未受檢視", "人無法說明設計如何回答問題"],
+    epistemicRisksEn: ["unexamined methodological assumptions", "inability to explain how the design answers the question"],
+    governanceResponsesZh: ["人獨立證成設計", "比較替代設計", "理解區辨邏輯"],
+    governanceResponsesEn: ["independently justify the design", "compare alternative designs", "understand the discriminating logic"],
+    ethicalIssuesZh: ["設計效度", "研究者是否理解設計"],
+    ethicalIssuesEn: ["design validity", "researcher understanding of the design"],
+    epistemicRiskScore: 3.0,
     claimAccountabilityRisk: "moderate",
     rationale_zh: "人擁有科學主張；AI 決定如何檢驗——屬方法判斷，而非產生 claim。",
     rationale_en: "Human owns the scientific claim; AI decides how to test it—methodological judgment, not claim generation.",
@@ -1276,7 +1534,16 @@ const QUESTIONS = [
     branch: "Level 3",
     humanContribution: "已決定 hypothesis、條件與 outcomes",
     aiDelegation: "選擇統計模型與完整分析策略",
-    ethicalIssues: ["who owns the analysis plan", "garden of forking paths if unverified"],
+
+    aiDelegationZh: "選擇統計模型與完整分析策略",
+    aiDelegationEn: "Selecting the statistical model and full analysis strategy",
+    epistemicRisksZh: ["不適當模型", "隱藏假設", "無法證成分析橋樑"],
+    epistemicRisksEn: ["inappropriate model", "hidden assumptions", "inability to justify the inferential bridge"],
+    governanceResponsesZh: ["人證成模型選擇", "比較替代模型", "適時 preregister"],
+    governanceResponsesEn: ["justify model choice", "compare alternatives", "preregister where appropriate"],
+    ethicalIssuesZh: ["誰擁有 analysis plan", "未驗證時的 forking paths"],
+    ethicalIssuesEn: ["who owns the analysis plan", "garden of forking paths if unverified"],
+    epistemicRiskScore: 3.3,
     claimAccountabilityRisk: "moderate-to-high",
     rationale_zh: "AI 決定證據將如何被評估，屬方法判斷。",
     rationale_en: "AI decides how evidence will be evaluated—methodological judgment.",
@@ -1297,7 +1564,16 @@ const QUESTIONS = [
     branch: "Level 3–4 boundary",
     humanContribution: "提供問題、設計與資料",
     aiDelegation: "多項方法決策，並判斷「哪些效果該報告」（靠近結果導向推理）",
-    ethicalIssues: ["researcher degrees of freedom", "selective reporting", "outcome-driven choices"],
+
+    aiDelegationZh: "多項方法決策 + 判斷哪些效果該報告",
+    aiDelegationEn: "Multiple methodological decisions plus which effects to report",
+    epistemicRisksZh: ["researcher degrees of freedom", "選擇性報告滑向結果導向推理"],
+    epistemicRisksEn: ["researcher degrees of freedom", "selective reporting sliding into outcome-driven inference"],
+    governanceResponsesZh: ["預先約束關鍵決策", "分開探索與確認", "完整報告"],
+    governanceResponsesEn: ["constrain key decisions in advance", "separate exploration from confirmation", "report comprehensively"],
+    ethicalIssuesZh: ["自由度濫用", "選擇性報告", "結果導向選擇"],
+    ethicalIssuesEn: ["degrees of freedom abuse", "selective reporting", "outcome-driven choices"],
+    epistemicRiskScore: 4.1,
     claimAccountabilityRisk: "high",
     rationale_zh: "模型／exclusion 選擇屬 Level 3；「該報告哪些效果」已靠近 Level 4 的結果導向詮釋。",
     rationale_en: "Model/exclusion choices are Level 3; deciding which effects to report approaches Level 4 outcome-driven interpretation.",
@@ -1318,7 +1594,16 @@ const QUESTIONS = [
     branch: "Level 4C",
     humanContribution: "提供未支持的結果；要求保留多元解釋",
     aiDelegation: "由結果產生科學解釋，並提出可區辨分析",
-    ethicalIssues: ["post-hoc interpretation", "need for independent evaluation of explanations"],
+
+    aiDelegationZh: "由結果產生競爭解釋並提出可區辨分析（4C）",
+    aiDelegationEn: "Generating competing explanations from results and discriminating analyses (4C)",
+    epistemicRisksZh: ["事後解釋變成方便敘事", "無法獨立評估解釋優劣"],
+    epistemicRisksEn: ["post-hoc explanation becoming a convenient narrative", "inability to independently evaluate explanations"],
+    governanceResponsesZh: ["保留多元解釋", "先設計區辨分析再下結論", "標示探索性質"],
+    governanceResponsesEn: ["retain multiple explanations", "design discriminating analyses before concluding", "label exploratory status"],
+    ethicalIssuesZh: ["事後詮釋", "需獨立評估解釋"],
+    ethicalIssuesEn: ["post-hoc interpretation", "need for independent evaluation"],
+    epistemicRiskScore: 3.5,
     claimAccountabilityRisk: "moderate-to-high",
     rationale_zh: "屬結果詮釋（4C）；產生競爭解釋不同於要求 AI 選定方便故事（對照 Q12）。",
     rationale_en: "Result interpretation (4C); generating competing explanations differs from asking AI to pick a convenient story (contrast Q12).",
@@ -1339,7 +1624,16 @@ const QUESTIONS = [
     branch: "Level 4D",
     humanContribution: "提供不顯著的主要結果，並要求改寫敘事",
     aiDelegation: "搜尋可發表結果，並事後重構 hypotheses／Discussion",
-    ethicalIssues: ["HARKing", "p-hacking", "selective reporting", "outcome-driven storytelling"],
+
+    aiDelegationZh: "搜尋可發表結果並事後重構 hypotheses／Discussion（4D）",
+    aiDelegationEn: "Searching for publishable results and reconstructing hypotheses/Discussion (4D)",
+    epistemicRisksZh: ["確認偏誤", "敘事過度擬合", "無法區分探索與確認"],
+    epistemicRisksEn: ["confirmation bias", "narrative overfitting", "failure to distinguish exploration from confirmation"],
+    governanceResponsesZh: ["清楚標示探索分析", "保留原始 hypotheses", "preregistration", "透明報告"],
+    governanceResponsesEn: ["clearly label exploratory analyses", "preserve original hypotheses", "preregistration", "transparent reporting"],
+    ethicalIssuesZh: ["HARKing", "p-hacking", "選擇性報告", "結局導向說故事"],
+    ethicalIssuesEn: ["HARKing", "p-hacking", "selective reporting", "outcome-driven storytelling"],
+    epistemicRiskScore: 4.8,
     claimAccountabilityRisk: "very high",
     rationale_zh: "層級標示的是科學委派（4D），不是倫理分數。倫理疑慮（HARKing 等）分開儲存——不要因為更有倫理爭議就自動升高 level。",
     rationale_en: "Level marks scientific delegation (4D), not ethics score. Ethical concerns (HARKing etc.) are stored separately—do not raise the level merely because the scenario is more ethically fraught.",
@@ -1360,7 +1654,16 @@ const QUESTIONS = [
     branch: "Level 2",
     humanContribution: "Hypothesis、設計、DV、時序與 preregistered analysis 皆已指定",
     aiDelegation: "依規格實作實驗與分析程式",
-    ethicalIssues: ["verification of code", "code reliability", "blind execution of incorrect code"],
+
+    aiDelegationZh: "依完整規格實作實驗與分析程式（科學決策已由人指定）",
+    aiDelegationEn: "Implementing experiment/analysis code from a complete human specification",
+    epistemicRisksZh: ["程序理解流失", "隱藏實作錯誤", "自動化偏誤"],
+    epistemicRisksEn: ["loss of procedural understanding", "hidden implementation errors", "automation bias"],
+    governanceResponsesZh: ["程式檢查", "測試", "可重現", "研究者理解關鍵實作"],
+    governanceResponsesEn: ["code inspection", "testing", "reproducibility", "researcher understanding of key implementation"],
+    ethicalIssuesZh: ["程式可靠性", "盲目執行錯誤程式"],
+    ethicalIssuesEn: ["code reliability", "blind execution of incorrect code"],
+    epistemicRiskScore: 2.8,
     claimAccountabilityRisk: "low-to-moderate",
     rationale_zh: "產出可能遠多於 Q5／Q7，但科學委派較低。教師重點：大量 AI 產出 ≠ 高科學委派。",
     rationale_en: "AI may generate more total content than in Q5 or Q7, but scientific delegation is lower. Teaching point: volume ≠ involvement.",
@@ -1381,7 +1684,16 @@ const QUESTIONS = [
     branch: "Level 4.5 / high L4–L5",
     humanContribution: "只提供寬泛研究領域；事後挑選計畫",
     aiDelegation: "建構幾乎整條智識管線（gap→理論→假設→設計→分析）",
-    ethicalIssues: ["selector/approver role", "thin epistemic ownership", "verification burden"],
+
+    aiDelegationZh: "由寬泛領域建構幾乎整條研究管線",
+    aiDelegationEn: "Constructing nearly the full research pipeline from a broad domain",
+    epistemicRisksZh: ["認識依賴", "薄的 epistemic ownership", "難以重建研究為何存在"],
+    epistemicRisksEn: ["epistemic dependency", "thin epistemic ownership", "difficulty reconstructing why the research should exist"],
+    governanceResponsesZh: ["獨立評估 rationale", "重建邏輯", "挑戰假設與方法", "展示實質人類貢獻"],
+    governanceResponsesEn: ["independently evaluate rationale", "reconstruct logic", "challenge hypotheses and methods", "demonstrate substantial human contribution"],
+    ethicalIssuesZh: ["selector/approver 角色", "驗證負擔"],
+    ethicalIssuesEn: ["selector/approver role", "verification burden"],
+    epistemicRiskScore: 4.5,
     claimAccountabilityRisk: "very high",
     rationale_zh: "人提供寬廣領域，AI 建構大部分科學管線；視覺位置 4.5，介於高強度科學推理與自主生成之間。",
     rationale_en: "Human provides a broad domain; AI constructs most of the scientific pipeline. Visual position 4.5 between high Level 4 and Level 5.",
@@ -1402,7 +1714,16 @@ const QUESTIONS = [
     branch: "Level 5",
     humanContribution: "只提供身份／場域脈絡",
     aiDelegation: "自行決定主題並建構完整智識研究管線",
-    ethicalIssues: ["whose research is this", "inability to defend claims", "epistemic ownership"],
+
+    aiDelegationZh: "自行決定主題並建構完整智識管線",
+    aiDelegationEn: "Independently choosing the topic and constructing the full intellectual pipeline",
+    epistemicRisksZh: ["研究者自主性侵蝕", "無法獨立重建研究為何如此設計", "偏誤貫穿整條管線"],
+    epistemicRisksEn: ["erosion of researcher autonomy", "inability to reconstruct why the research is designed this way", "biases across the whole pipeline"],
+    governanceResponsesZh: ["強化督導", "provenance", "獨立重建", "某些情境需額外揭露或限制委派"],
+    governanceResponsesEn: ["strong oversight", "provenance", "independent reconstruction", "possible disclosure or limits in some settings"],
+    ethicalIssuesZh: ["這是誰的研究", "能否辯護 claims", "epistemic ownership"],
+    ethicalIssuesEn: ["whose research is this", "ability to defend claims", "epistemic ownership"],
+    epistemicRiskScore: 5.0,
     claimAccountabilityRisk: "extreme",
     rationale_zh: "最清楚的 Level 5 錨點：AI 決定要做什麼研究。",
     rationale_en: "Clearest Level 5 anchor: AI decides what research to do.",
@@ -1419,7 +1740,8 @@ const Q_BY_ID = Object.fromEntries(QUESTIONS.map(q => [q.id, q]));
 ============================================================================ */
 const STATE = {
   view: "landing", // landing | demographics | student | submitted | teacher
-  teacherSection: 0, // 0 overview, 1 bars, 2 level guide, 3 hierarchy, 4 level agg, 5 compare, 6 final
+  teacherSection: 0, // 0 overview, 1 bars, 2 fourDims, 3 levelGuide, 4 hierarchy, 5 epistemicCost, 6 riskMatrix, 7 governance, 8 compare, 9 final
+  tableExpanded: {},
   participantId: null,
   order: [],
   index: 0,
@@ -1913,20 +2235,25 @@ function renderStudentQuestion() {
   const allAnswered = STATE.order.every(id => STATE.answers[id] != null);
 
   return `
+    <div class="ethics-banner">
+      <h2>Ethics / Research Integrity｜研究倫理／研究誠信</h2>
+      <p style="margin:0 0 0.35rem;font-weight:600">你認為這種 AI 使用方式在學術研究中是可以接受的嗎？</p>
+      <p style="margin:0 0 0.55rem;font-size:0.92rem">Do you think this use of AI is academically acceptable?</p>
+      <p style="margin:0;font-size:0.85rem;color:var(--ink-muted)">請先依照你的直覺與你目前對 research integrity 的理解作答。此階段不會顯示我們對 AI 使用程度的分類。<br/>Please respond based on your own judgment and current understanding of research integrity. The AI-use classification framework will not be shown at this stage.</p>
+    </div>
     <div class="progress-wrap">
       <strong>${STATE.index + 1} / ${STATE.order.length}</strong>
       <div class="progress-bar"><span style="width:${progress}%"></span></div>
     </div>
     <article class="prompt-card">
-      <p class="ask">你認為這種 AI 使用方式在學術上可以接受嗎？<br/><span style="font-size:0.88rem">Do you think this use of AI is academically acceptable?</span></p>
       ${bilingualPromptHtml(q)}
     </article>
-    <p class="scale-label">請選擇：</p>
+    <p class="scale-label">請選擇（無正確／錯誤答案）：</p>
     <div class="response-scale">
       ${RESPONSE_LABELS.map(r => `
         <button type="button" class="resp-btn ${answered === r.value ? "active" : ""}" data-action="answer" data-value="${r.value}">
           <span class="n">${r.value}</span>
-          <span>${r.zh}<br/><small style="color:var(--ink-muted)">${r.en}</small></span>
+          <span>${r.en}｜${r.zh}</span>
         </button>`).join("")}
     </div>
     <div class="nav-row">
@@ -1941,11 +2268,21 @@ function renderStudentQuestion() {
 
 function renderSubmitted() {
   return `
-    <div class="confirm-card">
-      <h2>感謝你的參與</h2>
-      <p>你的匿名回答已送出。請等待教師開始課堂討論與結果展示。</p>
-      <button data-action="go-landing">回到首頁</button>
-      <button class="ghost" data-action="start-teacher">查看結果（教師）</button>
+    <div class="panel" style="max-width:860px;margin:0 auto">
+      <h2 style="font-family:var(--font-serif)">你剛剛其實回答的是其中一個問題</h2>
+      <p style="color:var(--ink-muted);margin-top:0">You have just answered only one part of the problem.</p>
+      <p>你的匿名<strong>倫理可接受度</strong>判斷已送出。接下來課堂會引入另外三個不能互相取代的問題：</p>
+      <div class="four-grid">
+        <div class="four-box"><h4>1. Ethics / Research Integrity</h4><p>Is this practice normatively acceptable?<br/>這種做法在規範上可以接受嗎？</p></div>
+        <div class="four-box"><h4>2. AI Delegation</h4><p>What scientific work or judgment was delegated to AI?<br/>什麼科學工作／判斷被委派給 AI？</p></div>
+        <div class="four-box"><h4>3. Epistemic Risk</h4><p>What might be lost or distorted in knowledge production?<br/>知識生產中可能失去或扭曲什麼？</p></div>
+        <div class="four-box"><h4>4. Governance Response</h4><p>What should the researcher retain, verify, document, or justify?<br/>研究者應保留、核對、紀錄或證成什麼？</p></div>
+      </div>
+      <p style="font-size:1.05rem"><strong>這四個問題彼此相關，但不能互相取代。</strong><br/><span style="color:var(--ink-muted)">These are related questions, but they are not the same question.</span></p>
+      <div style="display:flex;gap:0.6rem;flex-wrap:wrap;margin-top:1rem">
+        <button class="primary" data-action="start-teacher">開始課堂結果展示</button>
+        <button data-action="go-landing">回到首頁</button>
+      </div>
     </div>`;
 }
 
@@ -1975,12 +2312,15 @@ function instructorPanelHtml() {
 function sectionNavHtml() {
   const sections = [
     "總覽",
-    "每一題判斷",
+    "倫理判斷",
+    "四維區分",
     "層級說明",
-    "AI involvement",
-    "跨層級比較",
+    "委派連續體",
+    "認知成本",
+    "風險矩陣",
+    "治理層層",
     "對照討論",
-    "Claim accountability"
+    "綜合收束"
   ];
   return `<div class="section-nav">${sections.map((s, i) =>
     `<button class="${STATE.teacherSection === i ? "active" : ""}" data-action="goto-section" data-section="${i}">${s}</button>`
@@ -1988,12 +2328,13 @@ function sectionNavHtml() {
 }
 
 function renderTeacherLevelGuide() {
+  const expanded = STATE.tableExpanded || {};
   return `
     <div class="panel">
-      <h2>AI involvement 層級說明</h2>
-      <p class="lead">這套層級測量的是：<strong>有多少具後果性的 scientific judgment 從人類研究者委派給 AI？</strong><br/>
-      它<strong>不</strong>測量字數、程式量、輸出長度、技術難度、研究流程階段，也不等於倫理可接受度。<br/>
-      <strong>AI involvement level ≠ ethical acceptability</strong></p>
+      <h2>AI Scientific Reasoning Delegation</h2>
+      <h3 style="margin:0 0 0.35rem;font-weight:600">AI 科學推理委派程度</h3>
+      <p class="lead"><strong>What kind of scientific responsibility is being delegated to AI?</strong><br/>
+      這不是倫理嚴重程度量表。每一層用四個分開的欄位來教：AI Delegation、Primary Epistemic Risk、Governance Response、Key Diagnostic Question。</p>
       <div class="level-guide-list">
         ${LEVEL_META.map(lm => `
           <article class="level-guide-card">
@@ -2002,27 +2343,147 @@ function renderTeacherLevelGuide() {
               <h3>${escapeHtml(lm.name_zh)}</h3>
               <span class="en-name">${escapeHtml(lm.name_en)}</span>
             </header>
-            <p class="core-q">${escapeHtml(lm.core_zh)} <span style="opacity:.75">${escapeHtml(lm.core_en)}</span></p>
-            <p class="desc">${escapeHtml(lm.desc_zh)}</p>
-            <p class="desc" style="color:var(--ink-muted);font-size:0.9rem">${escapeHtml(lm.desc_en)}</p>
-            <div class="human-ai">
-              <div>${escapeHtml(lm.human_zh)}</div>
-              <div>${escapeHtml(lm.ai_zh)}</div>
+            <p class="core-q"><strong>Diagnostic：</strong>${escapeHtml(lm.core_zh)} <span style="opacity:.75">${escapeHtml(lm.core_en)}</span></p>
+            <div class="dim-block"><div class="dim-title">AI Delegation｜委派內容</div>${escapeHtml(lm.aiDelegation_zh)}<br/><span style="color:var(--ink-muted)">${escapeHtml(lm.aiDelegation_en)}</span></div>
+            <div class="dim-block"><div class="dim-title">Primary Epistemic Risk｜主要認識風險</div><strong>${escapeHtml(lm.epistemicRisk_zh)}</strong><br/><span style="color:var(--ink-muted)">${escapeHtml(lm.epistemicRisk_en)}</span>
+              <ul style="margin:0.4rem 0 0;padding-left:1.1rem">${(lm.epistemicRiskDetails_zh||[]).map(x=>`<li>${escapeHtml(x)}</li>`).join("")}</ul>
+            </div>
+            <div class="dim-block"><div class="dim-title">Governance Response｜治理回應</div><strong>${escapeHtml(lm.governance_zh)}</strong><br/><span style="color:var(--ink-muted)">${escapeHtml(lm.governance_en)}</span>
+              <ul style="margin:0.4rem 0 0;padding-left:1.1rem">${(lm.governanceDetails_zh||[]).map(x=>`<li>${escapeHtml(x)}</li>`).join("")}</ul>
             </div>
             ${lm.subtypes ? `<ul class="subtypes">${lm.subtypes.map(s => `<li>${escapeHtml(s)}</li>`).join("")}</ul>` : ""}
-            <p class="example">${escapeHtml(lm.example_zh)}</p>
-            ${lm.boundary_zh ? `<p class="example" style="border-top:none;padding-top:0;color:var(--ink-muted)">邊界：${escapeHtml(lm.boundary_zh)}</p>` : ""}
+            ${lm.extraNote_zh ? `<p class="example">${escapeHtml(lm.extraNote_zh)}<br/><span style="color:var(--ink-muted)">${escapeHtml(lm.extraNote_en||"")}</span></p>` : ""}
+            <p class="example">例題：${(lm.exampleQs||[]).join(", ")}</p>
           </article>`).join("")}
       </div>
+
+      <h3 style="margin:1.25rem 0 0.5rem">精簡對照表｜Compact summary</h3>
+      <p class="lead">點列可展開細節。供投影閱讀。</p>
+      <div style="overflow:auto">
+        <table class="summary-table">
+          <thead>
+            <tr>
+              <th>Level</th>
+              <th>AI Delegation</th>
+              <th>Main Epistemic Risk</th>
+              <th>Primary Governance</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${LEVEL_META.map(lm => `
+              <tr class="expandable" data-action="toggle-table-row" data-level="${lm.level}">
+                <td><strong>L${lm.level}</strong> ${escapeHtml(lm.name_en)}<br/><span style="color:var(--ink-muted)">${escapeHtml(lm.name_zh)}</span></td>
+                <td>${escapeHtml(lm.aiDelegationShort_en)}<br/><span style="color:var(--ink-muted)">${escapeHtml(lm.aiDelegationShort_zh)}</span></td>
+                <td>${escapeHtml(lm.epistemicRiskShort_en)}<br/><span style="color:var(--ink-muted)">${escapeHtml(lm.epistemicRiskShort_zh)}</span></td>
+                <td>${escapeHtml(lm.governanceShort_en)}<br/><span style="color:var(--ink-muted)">${escapeHtml(lm.governanceShort_zh)}</span></td>
+              </tr>
+              ${expanded[lm.level] ? `<tr class="detail-row"><td colspan="4">
+                <strong>Risks：</strong>${(lm.epistemicRiskDetails_zh||[]).join("；")}<br/>
+                <strong>Governance：</strong>${(lm.governanceDetails_zh||[]).join("；")}<br/>
+                <strong>Examples / 例題：</strong>${(lm.exampleQs||[]).join(", ")}
+              </td></tr>` : ""}
+            `).join("")}
+          </tbody>
+        </table>
+      </div>
       <div class="level-guide-note">
-        <strong>分類準則：</strong>看「誰做出具後果性的科學決策」，而不是「這是研究的哪一個階段」。<br/>
-        例如：文獻工作可以是 L1（摘要證據）、L4（決定理論結論）或 L5（AI 自選文獻／gap／問題／假設）；
-        程式撰寫即使產出極多，只要規格已定，仍可是 L2。<br/><br/>
-        本 Level 0–5 架構是<strong>為本次課堂討論發展的教學框架</strong>，不是經驗驗證過的量表，也不是 Ward van Zoonen 提出的分類法。
-        <strong>Claim accountability</strong> 概念應另行歸因於相關學術討論。
+        本 Level 0–5 是<strong>課堂教學框架</strong>，不是經驗驗證量表，也不是 Ward van Zoonen 提出的分類法。Claim accountability 與治理概念應另行歸因於學術來源。
       </div>
     </div>`;
 }
+
+function renderFourDimensions() {
+  return `
+    <div class="panel">
+      <h2>四個相關但不能互相取代的問題</h2>
+      <p class="lead">問卷第一階段收集的是 Ethics／Research Integrity。現在把另外三維度一起放上桌面。</p>
+      <div class="four-grid">
+        <div class="four-box"><h4>1. Ethics / Research Integrity</h4><p><strong>Is this practice normatively acceptable?</strong><br/>這種做法在規範上可以接受嗎？</p></div>
+        <div class="four-box"><h4>2. AI Delegation</h4><p><strong>What scientific work or judgment was delegated to AI?</strong><br/>什麼科學責任／判斷被委派？</p></div>
+        <div class="four-box"><h4>3. Epistemic Risk</h4><p><strong>What might be lost or distorted in knowledge production?</strong><br/>知識生產可能失去或扭曲什麼？</p></div>
+        <div class="four-box"><h4>4. Governance Response</h4><p><strong>What should the researcher retain, verify, document, or justify?</strong><br/>應保留、核對、紀錄或證成什麼？</p></div>
+      </div>
+      <p style="font-size:1.08rem"><strong>這四個問題彼此相關，但不能互相取代。</strong></p>
+      <div class="axis-note" style="margin-top:1rem">
+        <strong>教學關鍵訊息</strong><br/>
+        • 一種做法可以在倫理上可接受，但仍有認識／知識生產成本。<br/>
+        • 更高的 AI delegation 不自動等於更不道德。<br/>
+        • 治理應回應「委派任務所造成的 epistemic risk 類型」，而不是只禁止更密集的 AI 使用。<br/><br/>
+        <strong>Non-monotonicity｜非單調性：</strong>更高委派 ≠ 機械地等於更高實際認識風險。<br/>
+        例：Level 4 + 強獨立重建，可能比 Level 1 + 盲目接受 AI 文獻綜整，產出更可靠的學術工作。<br/>
+        因此：Level 描述委派的<strong>類型與範圍</strong>；Epistemic risk 描述可能出錯之處；Governance 描述如何緩解；Ethics 問規範可接受性。
+      </div>
+    </div>`;
+}
+
+function renderEpistemicCost() {
+  return `
+    <div class="panel">
+      <h2>Academically acceptable ≠ Epistemically cost-free</h2>
+      <h3 style="margin:0 0 0.75rem">學術上可以接受 ≠ 沒有認知／知識生產成本</h3>
+      <div class="cost-card" data-action="open-question" data-qid="Q13">
+        <h4>Q13 · Level 2 Scientific Execution</h4>
+        <p>人完整指定實驗與分析；AI 產生大量程式。許多人可能判斷為可接受。</p>
+        <p><strong>可能的認識成本：</strong>程序理解流失、未被注意的實作錯誤。</p>
+        <p><strong>Governance：</strong>程式檢查 + 測試 + 可重現 + 研究者理解。</p>
+        <p style="color:var(--ink-muted);font-size:0.88rem">大量 AI 產出 ≠ 高度科學委派。</p>
+      </div>
+      <div class="cost-card" data-action="open-question" data-qid="Q7">
+        <h4>Q7 · Level 4 Scientific Reasoning</h4>
+        <p>AI 綜整文獻、選定機制並產生 hypotheses。</p>
+        <p><strong>可能的認識成本：</strong>失去對「證據 → 機制」推論的所有權。</p>
+        <p><strong>Governance：</strong>原始文獻核對 + 替代解釋 + 獨立重建 + claim accountability。</p>
+      </div>
+      <div class="cost-card" data-action="open-question" data-qid="Q12">
+        <h4>Q12 · Level 4D Outcome-driven reconstruction</h4>
+        <p>AI 在 null results 中尋找有趣敘事並重寫 hypotheses。</p>
+        <p><strong>Epistemic risks：</strong>確認偏誤、敘事過度擬合、無法區分探索與確認。</p>
+        <p><strong>Research-integrity concerns：</strong>HARKing、選擇性報告、未揭露的結局導向分析。</p>
+        <p><strong>Governance：</strong>標示探索分析、保留原始 hypotheses、preregistration、透明報告。</p>
+        <p style="font-weight:600">Epistemic risk 與 research-integrity risk 可以重疊，但並不相同。</p>
+      </div>
+    </div>`;
+}
+
+function renderRiskMatrix() {
+  return `
+    <div class="panel">
+      <h2>Delegation × Potential Epistemic Risk</h2>
+      <p class="lead">X = AI Scientific Reasoning Delegation（L0→L5）；Y = 教學用潛在認識風險估計（Low→High）。<br/>
+      <strong>Illustrative teaching framework — not a validated empirical risk scale</strong><br/>
+      Y 軸<strong>不是</strong>由 level 機械換算，而是每題獨立指定的教學估計。</p>
+      <div class="risk-matrix-wrap"><canvas id="riskMatrixChart"></canvas></div>
+      <p class="lead">例：Q13＝L2／中度風險；Q7＝L4／中高；Q12＝L4／高（含誠信風險）；Q15＝L5／高。</p>
+      <h3 style="margin:1.25rem 0 0.5rem">附：跨層級可接受度（Ethics）</h3>
+      <p class="lead">依主要 level 彙整課堂倫理判斷——用來檢驗是否單調，不要預設一定會。</p>
+      <div class="chart-box"><canvas id="levelChart"></canvas></div>
+      <div id="levelTable" style="margin-top:1rem;overflow:auto"></div>
+    </div>`;
+}
+
+function renderGovernanceLayers() {
+  return `
+    <div class="panel">
+      <h2>Governance should become richer as the delegated judgment becomes more consequential</h2>
+      <h3 style="margin:0 0 0.75rem">當委派給 AI 的科學判斷越關鍵，治理方式也需要更完整</h3>
+      <p class="lead">後續層級<strong>不取代</strong>前面的防護，而是<strong>累積疊加</strong>。例如 Level 4 仍需要 verification 與 source traceability，再加上 claim accountability。</p>
+      <div class="gov-stack">
+        ${GOVERNANCE_LAYERS.map((g, i) => `
+          <div class="gov-layer">
+            <div class="cum">Layer ${i + 1} · cumulative</div>
+            <strong>${escapeHtml(g.zh)}</strong>
+            <div style="font-size:0.88rem;color:var(--ink-muted);margin-top:0.25rem">${escapeHtml(g.note_zh)}<br/>${escapeHtml(g.note_en)}</div>
+          </div>
+          ${i < GOVERNANCE_LAYERS.length - 1 ? '<div style="text-align:center;color:var(--ink-muted)">↓</div>' : ""}
+        `).join("")}
+      </div>
+      <div class="level-guide-note" style="margin-top:1rem">
+        Level 4 可能需要：Verification + Source traceability + methodological understanding + claim accountability。<br/>
+        Level 5 可能需要以上全部，再加上 stronger oversight 與 independent reconstruction。禁止不是自動後果。
+      </div>
+    </div>`;
+}
+
 
 function renderTeacherOverview() {
   const summary = controversySummary();
@@ -2071,8 +2532,8 @@ function renderTeacherBars() {
   const rows = sortedQuestions();
   return `
     <div class="panel">
-      <h2>每一題，大家怎麼判斷？</h2>
-      <p class="lead">水平 100% 堆疊長條。點選任一題可查看完整 bilingual prompt；level 預設不顯示。</p>
+      <h2>每一題，大家怎麼判斷倫理可接受度？</h2>
+      <p class="lead">這是 <strong>Ethics / Research Integrity</strong> 的課堂分布（100% 堆疊長條）。點選可看 bilingual prompt；Delegation／Epistemic risk／Governance 需另行揭示。</p>
       <div class="toolbar">
         <label>排序</label>
         <select id="sortMode">
@@ -2260,35 +2721,28 @@ function renderTeacherCompare() {
 
 function renderTeacherFinal() {
   const steps = [
-    "Delegation：這個 claim／判斷是誰做出的？",
-    "Verification：你有沒有 independently verify 證據、方法或輸出？",
-    "Reconstruction：如果把 AI 關掉，你能不能重建這個 reasoning？",
-    "Justification：你能否說明 supporting evidence 從哪裡來？",
-    "Defense：Reviewer challenge 時，你能不能 defend this claim？",
-    "Alternatives：你是否主動考慮 alternative explanations 與反證？"
+    "ETHICS：Is this practice normatively acceptable？這種做法在規範上可以接受嗎？",
+    "DELEGATION：What scientific judgment did I give to AI？我把什麼科學判斷交給了 AI？",
+    "EPISTEMIC RISK：What might I stop seeing, understanding, or being able to justify？我可能再也看不見、不理解或無法證成什麼？",
+    "GOVERNANCE：What must I verify, retain, document, reconstruct, or defend？我必須核對、保留、紀錄、重建或辯護什麼？"
   ];
   return `
     <div class="panel">
       <div class="final-screen">
-        <h2>層級告訴我們：我們把什麼委派給了 AI</h2>
-        <p style="font-size:1.08rem;margin:0 0 0.75rem;color:var(--ink-muted)">它<strong>不</strong>告訴我們：那樣使用是否合乎倫理。</p>
-        <p style="font-size:1.15rem;margin:0 0 0.5rem"><strong>第二個問題：研究者能否為所產生的科學主張負責？</strong></p>
+        <h2>四個問題一起看</h2>
         <ul class="reveal-steps" id="final-steps">
           ${steps.map((s, i) => `<li class="${i < STATE.finalStep ? "visible" : ""}">${i + 1}. ${s}</li>`).join("")}
         </ul>
         <button class="primary" data-action="reveal-final-step" ${STATE.finalStep >= steps.length ? "disabled" : ""}>
           ${STATE.finalStep >= steps.length ? "已全部揭示" : "揭示下一點"}
         </button>
-        <div class="final-statement" style="${STATE.finalStep >= steps.length ? "" : "opacity:0.35"}">
-          <p class="eq">Delegation · Verification · Claim accountability</p>
-          <p class="core" style="margin-bottom:0.75rem"><strong>Delegation</strong>：誰做了科學推理？　<strong>Verification</strong>：研究者有無獨立檢查？　<strong>Claim accountability</strong>：能否重建、證成、辯護並承擔該 claim？</p>
-          <p class="eq" style="font-size:1.15rem">Responsible AI use ≠ “How much AI did you use?”</p>
-          <p class="core">A more informative question is: <strong>“What scientific judgment did you delegate, and can you still account for the resulting claim?”</strong></p>
+        <div class="final-statement" style="${STATE.finalStep >= 4 ? "" : "opacity:0.35"}">
+          <p class="core" style="margin-bottom:0.85rem">負責任的學術 AI 使用，不只是「可不可以用 AI」的問題。<br/>更重要的是：在使用 AI 之後，研究者是否仍然保有理解、驗證、質疑、重建與為科學主張負責的能力。</p>
+          <p class="core" style="margin-bottom:0.85rem">Responsible AI use in research is not only a question of whether AI is allowed. It is also a question of what happens to the human researcher's ability to understand, justify, challenge, and take responsibility for scientific knowledge.</p>
+          <p class="eq" style="font-size:1.1rem;line-height:1.5">AI involvement ≠ ethical acceptability<br/>Academic acceptability ≠ epistemically cost-free<br/>Verification ≠ full claim accountability</p>
         </div>
         <p class="framework-note">
-          本 Level 0–5 階層是<strong>為本次課堂討論發展的教學框架</strong>，不是經驗驗證量表，也<strong>不是</strong> Ward van Zoonen 提出的分類法。
-          <strong>Claim accountability</strong> 概念應另行歸因於學術出版中負責任使用 AI 的相關討論。
-          AI involvement level ≠ ethical acceptability。
+          The Level 0–5 hierarchy is a teaching framework developed for this classroom discussion. It should not be presented as a validated scale or as a taxonomy directly proposed by Ward van Zoonen or other cited authors. Concepts such as claim accountability and governance responses should be attributed separately to their scholarly sources.
         </p>
       </div>
     </div>`;
@@ -2298,9 +2752,12 @@ function renderTeacher() {
   const sections = [
     renderTeacherOverview,
     renderTeacherBars,
+    renderFourDimensions,
     renderTeacherLevelGuide,
     renderTeacherHierarchy,
-    renderTeacherLevelAgg,
+    renderEpistemicCost,
+    renderRiskMatrix,
+    renderGovernanceLayers,
     renderTeacherCompare,
     renderTeacherFinal
   ];
@@ -2310,7 +2767,7 @@ function renderTeacher() {
     <div class="teacher-top">
       <div>
         <h1>課堂結果與討論</h1>
-        <p style="margin:0;color:var(--ink-muted)">Consequential scientific judgment 的委派 ≠ 倫理可接受度</p>
+        <p style="margin:0;color:var(--ink-muted)">Ethics · Delegation · Epistemic risk · Governance（四維分開）</p>
       </div>
     </div>
     ${sectionNavHtml()}
@@ -2338,11 +2795,12 @@ function render() {
   if (STATE.view === "landing") {
     mountQRCode();
   }
-  if (STATE.view === "teacher" && STATE.teacherSection === 4) {
+  if (STATE.view === "teacher" && STATE.teacherSection === 6) {
+    mountRiskMatrix();
     mountLevelChart();
     mountLevelTable();
   }
-  if (STATE.view === "teacher" && STATE.teacherSection === 3 && STATE.selectedQuestionId) {
+  if (STATE.view === "teacher" && STATE.teacherSection === 4 && STATE.selectedQuestionId) {
     fillHierarchyDetail(STATE.selectedQuestionId);
   }
 }
@@ -2369,6 +2827,57 @@ function mountQRCode() {
 function destroyCharts() {
   Object.values(STATE.charts).forEach(c => { try { c.destroy(); } catch (_) {} });
   STATE.charts = {};
+}
+
+function mountRiskMatrix() {
+  const canvas = document.getElementById("riskMatrixChart");
+  if (!canvas || typeof Chart === "undefined") return;
+  const pts = QUESTIONS.map(q => ({
+    x: q.bridgeLevels ? (q.bridgeLevels[0] + q.bridgeLevels[1]) / 2 : (q.position != null ? q.position : q.level),
+    y: q.epistemicRiskScore != null ? q.epistemicRiskScore : q.level,
+    id: q.id
+  }));
+  STATE.charts.riskMatrix = new Chart(canvas.getContext("2d"), {
+    type: "scatter",
+    data: {
+      datasets: [{
+        label: "Questionnaire items",
+        data: pts,
+        pointRadius: 8,
+        pointHoverRadius: 10,
+        backgroundColor: "rgba(47,93,80,0.75)",
+        borderColor: "#2f5d50"
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label(ctx) {
+              const p = pts[ctx.dataIndex];
+              return `${p.id}: Delegation≈${p.x}, Epistemic risk≈${p.y}`;
+            }
+          }
+        },
+        title: { display: true, text: "Illustrative teaching framework — not a validated risk scale" }
+      },
+      scales: {
+        x: {
+          min: -0.2, max: 5.2,
+          title: { display: true, text: "AI Scientific Reasoning Delegation (L0→L5)" },
+          ticks: { stepSize: 1 }
+        },
+        y: {
+          min: 0.5, max: 5.5,
+          title: { display: true, text: "Potential Epistemic Risk (Low→High)" },
+          ticks: { stepSize: 1 }
+        }
+      }
+    }
+  });
 }
 
 function mountLevelChart() {
@@ -2465,17 +2974,34 @@ function mountLevelTable() {
    MODAL / DETAIL
 ============================================================================ */
 function teacherRevealHtml(q) {
-  const ethics = (q.ethicalIssues || []).map(escapeHtml).join(" · ") || "—";
+  const list = (arr) => (arr && arr.length) ? `<ul style="margin:0.25rem 0 0;padding-left:1.1rem">${arr.map(x=>`<li>${escapeHtml(x)}</li>`).join("")}</ul>` : "—";
   return `
+    <div class="dim-block">
+      <div class="dim-title">1. Ethics / Research Integrity</div>
+      課堂分布見上方長條。倫理判斷與 level <strong>分開</strong>。
+      <div style="margin-top:0.35rem;font-size:0.88rem"><strong>Related integrity issues：</strong>${list(q.ethicalIssuesZh || q.ethicalIssuesEn)}</div>
+    </div>
+    <div class="dim-block">
+      <div class="dim-title">2. AI Delegation｜${escapeHtml(levelLabel(q))}</div>
+      ${escapeHtml(q.aiDelegationZh || q.aiDelegation || "")}<br/>
+      <span style="color:var(--ink-muted)">${escapeHtml(q.aiDelegationEn || "")}</span>
+      <div style="margin-top:0.35rem;font-size:0.88rem">Human：${escapeHtml(q.humanContribution || "—")}</div>
+      <div style="font-size:0.88rem">Subtype：${escapeHtml(q.subtype || "—")}</div>
+    </div>
+    <div class="dim-block">
+      <div class="dim-title">3. Epistemic Risk</div>
+      ${list(q.epistemicRisksZh)}
+      <div style="color:var(--ink-muted);font-size:0.85rem;margin-top:0.25rem">${list(q.epistemicRisksEn)}</div>
+      <div style="margin-top:0.35rem;font-size:0.85rem">Illustrative risk score (teaching)：${q.epistemicRiskScore != null ? q.epistemicRiskScore : "—"} / 5</div>
+    </div>
+    <div class="dim-block">
+      <div class="dim-title">4. Governance Response</div>
+      ${list(q.governanceResponsesZh)}
+      <div style="color:var(--ink-muted);font-size:0.85rem;margin-top:0.25rem">${list(q.governanceResponsesEn)}</div>
+      <p style="margin:0.45rem 0 0;font-size:0.85rem;color:var(--ink-muted)">治理不是簡單的「允許／禁止」規則。</p>
+    </div>
     <div class="reveal-box">
-      <div><strong>AI involvement：</strong>${levelLabel(q)}</div>
-      <div style="margin-top:0.35rem"><strong>Subtype：</strong>${escapeHtml(q.subtype || "—")}</div>
-      <div style="margin-top:0.35rem"><strong>位置：</strong>${q.bridgeLevels ? `bridge ${q.bridgeLevels.join("↔")}` : q.position}（委派分類，非倫理分數）</div>
-      <div style="margin-top:0.55rem"><strong>Human decides：</strong>${escapeHtml(q.humanContribution)}</div>
-      <div style="margin-top:0.35rem"><strong>AI does：</strong>${escapeHtml(q.aiDelegation)}</div>
-      <div style="margin-top:0.55rem"><strong>Ethical issues（獨立於 level）：</strong>${ethics}</div>
-      <div style="margin-top:0.35rem"><strong>Claim accountability risk：</strong>${escapeHtml(q.claimAccountabilityRisk || "—")}</div>
-      <div style="margin-top:0.55rem"><strong>Rationale：</strong>${escapeHtml(q.rationale_zh)}<br/><span style="color:var(--ink-muted)">${escapeHtml(q.rationale_en)}</span></div>
+      <div><strong>Rationale：</strong>${escapeHtml(q.rationale_zh)}<br/><span style="color:var(--ink-muted)">${escapeHtml(q.rationale_en)}</span></div>
       <div style="margin-top:0.45rem"><strong>Discussion：</strong>${escapeHtml(q.discussion_zh)}<br/><span style="color:var(--ink-muted)">${escapeHtml(q.discussion_en)}</span></div>
     </div>`;
 }
@@ -2504,7 +3030,7 @@ function openQuestionModal(qid, opts = {}) {
         </div>
         ${reveal ? teacherRevealHtml(q) : `
           <div style="margin-top:1rem">
-            <button class="primary" data-action="reveal-level" data-qid="${qid}">揭示這題的 AI involvement level</button>
+            <button class="primary" data-action="reveal-level" data-qid="${qid}">揭示 Delegation / Epistemic risk / Governance</button>
           </div>`}
       </div>
     </div>`;
@@ -2522,7 +3048,7 @@ function fillHierarchyDetail(qid) {
     ${stackBarHtml(stats)}
     <p style="font-size:0.88rem;color:var(--ink-muted)">Mean ${stats.mean != null ? stats.mean.toFixed(2) : "—"} · 分歧 ${stats.disagreement.toFixed(2)}</p>
     ${reveal ? teacherRevealHtml(q) : `
-      <button class="primary" data-action="reveal-level" data-qid="${qid}" style="margin-top:0.5rem">揭示這題的 AI involvement level</button>`}
+      <button class="primary" data-action="reveal-level" data-qid="${qid}" style="margin-top:0.5rem">揭示 Delegation / Epistemic risk / Governance</button>`}
   `;
 }
 
@@ -2631,30 +3157,37 @@ document.getElementById("app").addEventListener("click", async (e) => {
       render();
       break;
     case "next-section":
-      STATE.teacherSection = Math.min(6, STATE.teacherSection + 1);
-      if (STATE.teacherSection === 6) STATE.finalStep = 0;
+      STATE.teacherSection = Math.min(9, STATE.teacherSection + 1);
+      if (STATE.teacherSection === 9) STATE.finalStep = 0;
       render();
       break;
     case "goto-section":
       STATE.teacherSection = parseInt(t.getAttribute("data-section"), 10);
-      if (STATE.teacherSection === 6) STATE.finalStep = Math.min(STATE.finalStep, 6);
+      if (STATE.teacherSection === 9) STATE.finalStep = Math.min(STATE.finalStep, 4);
       render();
       break;
     case "open-question":
       openQuestionModal(t.getAttribute("data-qid"));
       break;
+    case "toggle-table-row": {
+      const lv = t.getAttribute("data-level");
+      STATE.tableExpanded = STATE.tableExpanded || {};
+      STATE.tableExpanded[lv] = !STATE.tableExpanded[lv];
+      render();
+      break;
+    }
     case "hierarchy-select":
       STATE.selectedQuestionId = t.getAttribute("data-qid");
       fillHierarchyDetail(STATE.selectedQuestionId);
       break;
     case "reveal-final-step":
-      STATE.finalStep = Math.min(6, STATE.finalStep + 1);
+      STATE.finalStep = Math.min(4, STATE.finalStep + 1);
       render();
       break;
     case "reveal-level": {
       const qid = t.getAttribute("data-qid");
       STATE.levelsRevealed[qid] = true;
-      if (STATE.view === "teacher" && STATE.teacherSection === 3) {
+      if (STATE.view === "teacher" && STATE.teacherSection === 4) {
         fillHierarchyDetail(qid);
       }
       break;
@@ -2686,7 +3219,7 @@ document.getElementById("modal-root").addEventListener("click", (e) => {
     const qid = t.getAttribute("data-qid");
     STATE.levelsRevealed[qid] = true;
     openQuestionModal(qid);
-    if (STATE.view === "teacher" && STATE.teacherSection === 3) fillHierarchyDetail(qid);
+    if (STATE.view === "teacher" && STATE.teacherSection === 4) fillHierarchyDetail(qid);
   } else if (action === "open-question") {
     openQuestionModal(t.getAttribute("data-qid"));
   }
@@ -2696,8 +3229,9 @@ let resizeTimer;
 window.addEventListener("resize", () => {
   clearTimeout(resizeTimer);
   resizeTimer = setTimeout(() => {
-    if (STATE.view === "teacher" && STATE.teacherSection === 4) {
+    if (STATE.view === "teacher" && STATE.teacherSection === 6) {
       destroyCharts();
+      mountRiskMatrix();
       mountLevelChart();
     }
   }, 150);
