@@ -2390,9 +2390,6 @@ function renderTeacherLevelGuide() {
           </tbody>
         </table>
       </div>
-      <div class="level-guide-note">
-        本 Level 0–5 是<strong>討論與調查用的概念框架</strong>，不是經驗驗證量表，也不是 Ward van Zoonen 提出的分類法。Claim accountability 與治理概念應另行歸因於學術來源。
-      </div>
     </div>`;
 }
 
@@ -2453,9 +2450,8 @@ function renderRiskMatrix() {
   return `
     <div class="panel">
       <h2>Delegation × Potential Epistemic Risk</h2>
-      <p class="lead">X = AI Scientific Reasoning Delegation（L0→L5）；Y = 討論用潛在認識風險估計（Low→High）。<br/>
-      <strong>Illustrative discussion framework — not a validated empirical risk scale</strong><br/>
-      Y 軸<strong>不是</strong>由 level 機械換算，而是每題獨立指定的概念估計。</p>
+      <p class="lead">X = AI Scientific Reasoning Delegation（L0→L5）；Y = 潛在認識風險估計（Low→High）。<br/>
+      Y 軸<strong>不是</strong>由 level 機械換算，而是每題獨立指定。</p>
       <div class="risk-matrix-wrap"><canvas id="riskMatrixChart"></canvas></div>
       <p class="lead">例：Q13＝L2／中度風險；Q7＝L4／中高；Q12＝L4／高（含誠信風險）；Q15＝L5／高。</p>
       <h3 style="margin:1.25rem 0 0.5rem">附：跨層級可接受度（Ethics）</h3>
@@ -2745,9 +2741,6 @@ function renderTeacherFinal() {
           <p class="core" style="margin-bottom:0.85rem">Responsible AI use in research is not only a question of whether AI is allowed. It is also a question of what happens to the human researcher's ability to understand, justify, challenge, and take responsibility for scientific knowledge.</p>
           <p class="eq" style="font-size:1.1rem;line-height:1.5">AI involvement ≠ ethical acceptability<br/>Academic acceptability ≠ epistemically cost-free<br/>Verification ≠ full claim accountability</p>
         </div>
-        <p class="framework-note">
-          The Level 0–5 hierarchy is a discussion/survey framework developed for research-community conversations (e.g., lab meetings, seminars, institute surveys). It should not be presented as a validated scale or as a taxonomy directly proposed by Ward van Zoonen or other cited authors. Concepts such as claim accountability and governance responses should be attributed separately to their scholarly sources.
-        </p>
       </div>
     </div>`;
 }
@@ -2866,7 +2859,7 @@ function mountRiskMatrix() {
             }
           }
         },
-        title: { display: true, text: "Illustrative discussion framework — not a validated risk scale" }
+        title: { display: true, text: "Delegation × Potential Epistemic Risk" }
       },
       scales: {
         x: {
@@ -2996,7 +2989,7 @@ function teacherRevealHtml(q) {
       <div class="dim-title">3. Epistemic Risk</div>
       ${list(q.epistemicRisksZh)}
       <div style="color:var(--ink-muted);font-size:0.85rem;margin-top:0.25rem">${list(q.epistemicRisksEn)}</div>
-      <div style="margin-top:0.35rem;font-size:0.85rem">Illustrative risk score (teaching)：${q.epistemicRiskScore != null ? q.epistemicRiskScore : "—"} / 5</div>
+      <div style="margin-top:0.35rem;font-size:0.85rem">Epistemic risk score：${q.epistemicRiskScore != null ? q.epistemicRiskScore : "—"} / 5</div>
     </div>
     <div class="dim-block">
       <div class="dim-title">4. Governance Response</div>
