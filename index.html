@@ -1,0 +1,2292 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>AI 在學術研究中，可以走多遠？</title>
+<!--
+================================================================================
+README — AI Research Ethics Classroom Tool
+================================================================================
+
+1) Run locally
+   - Open this file directly in a browser (double-click index.html), or
+   - Serve with any static server, e.g. `npx serve .` / Live Server.
+
+2) Change STUDENT_URL
+   - Edit CONFIG.STUDENT_URL below (e.g. your GitHub Pages student URL).
+   - The landing-page QR code and short URL text use this value.
+   - If empty, a visible placeholder is shown.
+
+3) Deploy with GitHub Pages
+   - Push this repo (or just index.html) to GitHub.
+   - Settings → Pages → Deploy from branch (main / root).
+   - Set CONFIG.STUDENT_URL to:
+     https://YOUR_USERNAME.github.io/YOUR_REPO/?mode=student
+   - Teacher opens the same site without ?mode=student (or use ?mode=teacher).
+
+4) Connect Supabase for live classroom responses
+   - Create a project at https://supabase.com
+   - Create table `ai_ethics_responses` (SQL below).
+   - Enable anonymous INSERT/SELECT via RLS (see comments in CONFIG/DATA).
+   - Fill CONFIG.SUPABASE_URL and CONFIG.SUPABASE_ANON_KEY.
+   - If unset, the app automatically uses Demo / localStorage mode.
+
+Suggested schema:
+
+  create table ai_ethics_responses (
+    id bigint generated always as identity primary key,
+    session_id text not null,
+    anonymous_participant_id text not null,
+    question_id text not null,
+    response_value smallint not null check (response_value between 1 and 5),
+    timestamp timestamptz default now(),
+    academic_stage text,
+    ai_use_frequency text
+  );
+
+  alter table ai_ethics_responses enable row level security;
+
+  -- Allow anonymous inserts (students submitting)
+  create policy "anon_insert" on ai_ethics_responses
+    for insert to anon with check (true);
+
+  -- Allow anonymous select for classroom aggregate display
+  create policy "anon_select" on ai_ethics_responses
+    for select to anon using (true);
+
+  -- Consider restricting SELECT to a shared session_id filter in production,
+  -- or using a service-role edge function. Do NOT put service-role keys in HTML.
+
+================================================================================
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600;8..60,700&display=swap" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+<style>
+:root {
+  --bg: #f7f5f1;
+  --bg-elevated: #ffffff;
+  --ink: #1c2430;
+  --ink-muted: #5a6573;
+  --line: #d8d2c8;
+  --accent: #2f5d50;
+  --accent-soft: #e4efe9;
+  --accent-2: #3a5270;
+  --warn: #8a6a2f;
+  --radius: 14px;
+  --shadow: 0 10px 30px rgba(28, 36, 48, 0.06);
+  --font-sans: "Noto Sans TC", "Segoe UI", sans-serif;
+  --font-serif: "Source Serif 4", "Noto Serif TC", Georgia, serif;
+  --r1: #2f5d50;
+  --r2: #6a9b87;
+  --r3: #b8a57a;
+  --r4: #c07a5a;
+  --r5: #8b4f4f;
+}
+
+* { box-sizing: border-box; }
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  line-height: 1.55;
+  min-height: 100%;
+}
+body.presentation {
+  background: #f3f0ea;
+}
+button, select, input {
+  font: inherit;
+}
+button {
+  cursor: pointer;
+  border: 1px solid var(--line);
+  background: var(--bg-elevated);
+  color: var(--ink);
+  border-radius: 10px;
+  padding: 0.65rem 1rem;
+  transition: background .15s ease, border-color .15s ease, transform .1s ease;
+}
+button:hover { border-color: #b9b1a4; }
+button:active { transform: translateY(1px); }
+button.primary {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+button.primary:hover { background: #264c42; }
+button.ghost {
+  background: transparent;
+}
+button.active {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.hidden { display: none !important; }
+
+.app-shell {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 1.25rem 1.25rem 4rem;
+}
+.banner-demo {
+  background: #fff4d8;
+  color: #6b5218;
+  border: 1px solid #e4d19a;
+  border-radius: 10px;
+  padding: 0.55rem 0.9rem;
+  margin-bottom: 1rem;
+  font-size: 0.92rem;
+  text-align: center;
+}
+
+/* Landing */
+.landing {
+  display: grid;
+  gap: 1.5rem;
+  align-items: start;
+}
+@media (min-width: 900px) {
+  .landing {
+    grid-template-columns: 1.2fr 0.8fr;
+    gap: 2rem;
+    min-height: calc(100vh - 4rem);
+    align-items: center;
+  }
+}
+.landing-copy h1 {
+  font-family: var(--font-serif);
+  font-weight: 650;
+  font-size: clamp(1.8rem, 4vw, 2.75rem);
+  line-height: 1.2;
+  margin: 0 0 0.75rem;
+  letter-spacing: -0.01em;
+}
+.landing-copy .subtitle {
+  font-size: 1.08rem;
+  color: var(--ink-muted);
+  margin: 0 0 1.5rem;
+  max-width: 36rem;
+}
+.landing-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+.qr-card {
+  background: var(--bg-elevated);
+  border: 1px solid var(--line);
+  border-radius: calc(var(--radius) + 4px);
+  box-shadow: var(--shadow);
+  padding: 1.5rem;
+  text-align: center;
+}
+.qr-card h2 {
+  margin: 0 0 1rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--ink-muted);
+}
+#qrcode {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+  min-width: 200px;
+  margin: 0 auto 1rem;
+  background: #fff;
+  padding: 10px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+}
+#qrcode img, #qrcode canvas { display: block; }
+.qr-placeholder {
+  color: var(--warn);
+  font-size: 0.95rem;
+  padding: 1.5rem 1rem;
+  border: 1px dashed #c9a75a;
+  border-radius: 10px;
+  background: #fffaf0;
+  max-width: 260px;
+  margin: 0 auto 1rem;
+}
+.short-url {
+  font-size: 0.9rem;
+  word-break: break-all;
+  color: var(--accent-2);
+  margin: 0;
+}
+.meta-note {
+  margin-top: 1.25rem;
+  font-size: 0.88rem;
+  color: var(--ink-muted);
+}
+
+/* Student */
+.progress-wrap {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  gap: 1rem;
+}
+.progress-bar {
+  flex: 1;
+  height: 8px;
+  background: #e8e2d8;
+  border-radius: 999px;
+  overflow: hidden;
+}
+.progress-bar > span {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+  width: 0%;
+  transition: width .25s ease;
+}
+.prompt-card {
+  background: var(--bg-elevated);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 1.35rem 1.35rem 1.5rem;
+  margin-bottom: 1.25rem;
+}
+.prompt-card .ask {
+  font-size: 0.95rem;
+  color: var(--ink-muted);
+  margin: 0 0 1rem;
+}
+.lang-block {
+  margin-bottom: 1.1rem;
+}
+.lang-block:last-child { margin-bottom: 0; }
+.lang-label {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--accent);
+  background: var(--accent-soft);
+  border-radius: 6px;
+  padding: 0.15rem 0.5rem;
+  margin-bottom: 0.45rem;
+}
+.prompt-text {
+  font-size: clamp(1rem, 2.2vw, 1.15rem);
+  margin: 0;
+  white-space: pre-wrap;
+}
+.scale-label {
+  font-weight: 600;
+  margin: 0 0 0.75rem;
+}
+.response-scale {
+  display: grid;
+  gap: 0.55rem;
+  margin-bottom: 1.25rem;
+}
+@media (min-width: 720px) {
+  .response-scale {
+    grid-template-columns: repeat(5, 1fr);
+  }
+}
+.resp-btn {
+  text-align: left;
+  padding: 0.85rem 0.9rem;
+  min-height: 3.4rem;
+  border-width: 1.5px;
+}
+.resp-btn .n {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--ink-muted);
+  margin-bottom: 0.15rem;
+}
+.nav-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+.demo-form, .confirm-card {
+  background: var(--bg-elevated);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  box-shadow: var(--shadow);
+  max-width: 560px;
+  margin: 2rem auto;
+}
+.demo-form h2, .confirm-card h2 {
+  font-family: var(--font-serif);
+  margin: 0 0 0.75rem;
+}
+.field {
+  margin-bottom: 1rem;
+}
+.field label {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-bottom: 0.35rem;
+}
+.field select {
+  width: 100%;
+  padding: 0.65rem 0.75rem;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: #fff;
+}
+
+/* Teacher layout */
+.teacher-layout {
+  display: grid;
+  gap: 1rem;
+}
+.teacher-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.teacher-top h1 {
+  font-family: var(--font-serif);
+  font-size: clamp(1.4rem, 3vw, 2rem);
+  margin: 0 0 0.35rem;
+}
+.section-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin: 0.75rem 0 0.25rem;
+}
+.section-nav button {
+  font-size: 0.88rem;
+  padding: 0.45rem 0.75rem;
+}
+.panel {
+  background: var(--bg-elevated);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 1.15rem 1.25rem 1.35rem;
+  box-shadow: var(--shadow);
+  margin-bottom: 1rem;
+}
+.panel h2 {
+  font-family: var(--font-serif);
+  font-size: 1.35rem;
+  margin: 0 0 0.35rem;
+}
+.panel .lead {
+  color: var(--ink-muted);
+  margin: 0 0 1rem;
+  font-size: 0.95rem;
+}
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+.toolbar label {
+  font-size: 0.88rem;
+  color: var(--ink-muted);
+}
+.toolbar select {
+  padding: 0.4rem 0.55rem;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: #fff;
+}
+
+/* Instructor controls */
+.instructor-panel {
+  position: sticky;
+  top: 0.5rem;
+  z-index: 40;
+  background: rgba(255,255,255,0.95);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  margin-bottom: 1rem;
+  overflow: hidden;
+}
+.instructor-panel header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.65rem 0.9rem;
+  cursor: pointer;
+  user-select: none;
+  font-weight: 600;
+  font-size: 0.92rem;
+}
+.instructor-body {
+  display: none;
+  padding: 0 0.9rem 0.9rem;
+  border-top: 1px solid var(--line);
+}
+.instructor-panel.open .instructor-body { display: block; }
+.control-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  padding-top: 0.75rem;
+}
+
+/* Stacked bars list */
+.q-bar-list {
+  display: grid;
+  gap: 0.65rem;
+}
+.q-bar-row {
+  display: grid;
+  grid-template-columns: 48px 1fr auto;
+  gap: 0.65rem;
+  align-items: center;
+  padding: 0.45rem 0.5rem;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: background .15s ease, border-color .15s ease;
+}
+.q-bar-row:hover, .q-bar-row.selected {
+  background: #f3f7f5;
+  border-color: #c9ddd4;
+}
+.q-id {
+  font-weight: 700;
+  color: var(--accent-2);
+}
+.stack {
+  display: flex;
+  height: 28px;
+  border-radius: 7px;
+  overflow: hidden;
+  background: #ece7df;
+  width: 100%;
+}
+.stack > span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 0.68rem;
+  font-weight: 600;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.mean-pill {
+  font-size: 0.8rem;
+  color: var(--ink-muted);
+  min-width: 3.2rem;
+  text-align: right;
+}
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem 1rem;
+  margin: 0 0 1rem;
+  font-size: 0.82rem;
+}
+.legend i {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  margin-right: 0.35rem;
+}
+
+/* Hierarchy */
+.hierarchy-wrap {
+  display: grid;
+  gap: 1rem;
+}
+@media (min-width: 900px) {
+  .hierarchy-wrap {
+    grid-template-columns: 1fr 320px;
+    align-items: start;
+  }
+}
+.hierarchy {
+  position: relative;
+  padding: 0.5rem 0 0.5rem 0;
+  min-height: 640px;
+}
+.hierarchy-track {
+  position: absolute;
+  left: 118px;
+  top: 24px;
+  bottom: 24px;
+  width: 3px;
+  background: linear-gradient(180deg, #8fb5a6, #3a5270);
+  border-radius: 999px;
+}
+.level-row {
+  position: relative;
+  display: grid;
+  grid-template-columns: 110px 1fr;
+  gap: 1rem;
+  min-height: 96px;
+  padding: 0.35rem 0;
+}
+.level-label {
+  text-align: right;
+  padding-top: 0.35rem;
+}
+.level-label .lv {
+  font-weight: 700;
+  font-size: 0.92rem;
+}
+.level-label .name {
+  font-size: 0.78rem;
+  color: var(--ink-muted);
+  line-height: 1.3;
+}
+.level-slot {
+  position: relative;
+  border-left: none;
+  padding-left: 1.4rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  align-items: flex-start;
+  align-content: flex-start;
+}
+.level-slot::before {
+  content: "";
+  position: absolute;
+  left: -5px;
+  top: 12px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #fff;
+  border: 3px solid var(--accent);
+}
+.q-chip {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 0.4rem 0.55rem;
+  min-width: 72px;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(28,36,48,0.04);
+  transition: border-color .15s ease, transform .1s ease;
+}
+.q-chip:hover {
+  border-color: var(--accent);
+  transform: translateY(-1px);
+}
+.q-chip .qid { font-weight: 700; font-size: 0.88rem; }
+.q-chip .branch {
+  font-size: 0.68rem;
+  color: var(--ink-muted);
+}
+.mini-bar {
+  display: flex;
+  height: 6px;
+  width: 100%;
+  border-radius: 999px;
+  overflow: hidden;
+  background: #ece7df;
+}
+.mini-bar > i { display: block; height: 100%; }
+.axis-note {
+  font-size: 0.85rem;
+  color: var(--ink-muted);
+  background: #f0eee8;
+  border-radius: 10px;
+  padding: 0.75rem 0.9rem;
+  margin-bottom: 1rem;
+}
+.axis-note strong { color: var(--ink); }
+
+.detail-panel h3 {
+  margin: 0 0 0.5rem;
+  font-size: 1.05rem;
+}
+.detail-panel .empty {
+  color: var(--ink-muted);
+  font-size: 0.92rem;
+}
+.bilingual-prompt {
+  margin: 0.75rem 0;
+}
+.reveal-box {
+  margin-top: 0.85rem;
+  padding: 0.85rem;
+  background: #f4f7f5;
+  border-radius: 10px;
+  border: 1px solid #d5e4dc;
+  font-size: 0.9rem;
+}
+.reveal-box.hidden-content { display: none; }
+
+/* Charts */
+.chart-box {
+  position: relative;
+  height: 360px;
+  max-width: 100%;
+}
+
+/* Comparison */
+.compare-grid {
+  display: grid;
+  gap: 1rem;
+}
+@media (min-width: 800px) {
+  .compare-grid.two {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+.compare-card {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 1rem;
+  background: #fcfbf8;
+  cursor: pointer;
+}
+.compare-card:hover { border-color: #b9cfc4; }
+.compare-card h4 {
+  margin: 0 0 0.5rem;
+  color: var(--accent-2);
+}
+.compare-question {
+  font-family: var(--font-serif);
+  font-size: 1.15rem;
+  margin: 1rem 0 0.5rem;
+}
+.compare-block {
+  margin-bottom: 1.75rem;
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid var(--line);
+}
+.compare-block:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+/* Controversy */
+.stat-grid {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  margin-bottom: 1rem;
+}
+.stat-card {
+  background: #f8f6f1;
+  border-radius: 12px;
+  padding: 0.85rem;
+  border: 1px solid var(--line);
+}
+.stat-card .k {
+  font-size: 0.78rem;
+  color: var(--ink-muted);
+  margin-bottom: 0.25rem;
+}
+.stat-card .v {
+  font-weight: 700;
+  font-size: 1.05rem;
+}
+.controversial-list {
+  display: grid;
+  gap: 0.5rem;
+}
+.controversial-item {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  align-items: center;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  cursor: pointer;
+  background: #fff;
+}
+.controversial-item:hover { border-color: #b9cfc4; }
+
+/* Final reveal */
+.final-screen {
+  max-width: 720px;
+  margin: 0 auto;
+  text-align: left;
+}
+.final-screen h2 {
+  font-family: var(--font-serif);
+  font-size: clamp(1.5rem, 3.5vw, 2.1rem);
+  line-height: 1.25;
+  margin: 0 0 1rem;
+}
+.reveal-steps {
+  list-style: none;
+  padding: 0;
+  margin: 1rem 0 1.5rem;
+}
+.reveal-steps li {
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity .4s ease, transform .4s ease;
+  padding: 0.65rem 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 1.05rem;
+}
+.reveal-steps li.visible {
+  opacity: 1;
+  transform: none;
+}
+.final-statement {
+  background: #1c2430;
+  color: #f7f5f1;
+  border-radius: 14px;
+  padding: 1.35rem 1.4rem;
+  margin: 1.25rem 0;
+}
+.final-statement .eq {
+  font-family: var(--font-serif);
+  font-size: clamp(1.2rem, 2.5vw, 1.55rem);
+  margin: 0 0 0.75rem;
+}
+.final-statement .core {
+  margin: 0;
+  color: #d7dde6;
+  font-size: 0.98rem;
+}
+.framework-note {
+  font-size: 0.88rem;
+  color: var(--ink-muted);
+  border-left: 3px solid var(--accent);
+  padding-left: 0.85rem;
+  margin-top: 1.25rem;
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(28,36,48,0.35);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 100;
+  padding: 1rem;
+}
+@media (min-width: 700px) {
+  .modal-backdrop { align-items: center; }
+}
+.modal {
+  background: #fff;
+  border-radius: 16px;
+  max-width: 720px;
+  width: 100%;
+  max-height: min(86vh, 860px);
+  overflow: auto;
+  padding: 1.25rem 1.35rem 1.5rem;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.18);
+}
+.modal header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+.modal h3 { margin: 0; font-family: var(--font-serif); }
+
+body.presentation .app-shell {
+  max-width: 1280px;
+  padding-top: 0.75rem;
+}
+body.presentation .instructor-panel:not(.force-show) {
+  opacity: 0.35;
+}
+body.presentation .instructor-panel:hover,
+body.presentation .instructor-panel.open {
+  opacity: 1;
+}
+
+@media (max-width: 640px) {
+  .q-bar-row {
+    grid-template-columns: 40px 1fr;
+  }
+  .mean-pill { display: none; }
+  .hierarchy-track { left: 88px; }
+  .level-row { grid-template-columns: 80px 1fr; }
+  .level-label .name { font-size: 0.7rem; }
+}
+</style>
+</head>
+<body>
+<div class="app-shell" id="app"></div>
+<div id="modal-root"></div>
+
+<script>
+/* ============================================================================
+   CONFIG
+============================================================================ */
+const CONFIG = {
+  // Fill after deployment, e.g. "https://yourname.github.io/ai-ethics/?mode=student"
+  STUDENT_URL: "",
+  // Supabase placeholders — leave empty to use Demo / localStorage mode
+  SUPABASE_URL: "",
+  SUPABASE_ANON_KEY: "",
+  SESSION_ID: "classroom-default",
+  STORAGE_KEY: "ai_ethics_classroom_v1",
+  TABLE_NAME: "ai_ethics_responses"
+};
+
+const RESPONSE_LABELS = [
+  { value: 5, zh: "明顯可接受", en: "Clearly acceptable", color: "var(--r1)" },
+  { value: 4, zh: "大致可接受", en: "Probably acceptable", color: "var(--r2)" },
+  { value: 3, zh: "視情況 / 不確定", en: "Depends / uncertain", color: "var(--r3)" },
+  { value: 2, zh: "大致不可接受", en: "Probably unacceptable", color: "var(--r4)" },
+  { value: 1, zh: "明顯不可接受", en: "Clearly unacceptable", color: "var(--r5)" }
+];
+
+const LEVEL_META = [
+  { level: 0, name_zh: "知識支援", name_en: "Knowledge support" },
+  { level: 1, name_zh: "證據綜整", name_en: "Evidence synthesis" },
+  { level: 2, name_zh: "科學構想", name_en: "Scientific ideation" },
+  { level: 3, name_zh: "科學推論", name_en: "Scientific inference" },
+  { level: 4, name_zh: "研究共構", name_en: "Research co-construction" },
+  { level: 5, name_zh: "自主研究生成", name_en: "Autonomous research generation" }
+];
+
+/* ============================================================================
+   QUESTIONS
+============================================================================ */
+const QUESTIONS = [
+  {
+    id: "Q1",
+    prompt_zh: "Impedance control 是什麼意思？請用 motor learning 的例子解釋給我聽。",
+    prompt_en: "What does impedance control mean? Please explain it to me using an example from motor learning.",
+    primary_level: 0,
+    secondary_level: null,
+    position: 0,
+    branch: "Level 0",
+    rationale_zh: "純概念解釋：AI 扮演教科書／家教，人類仍掌握所有研究決策。",
+    rationale_en: "Pure conceptual explanation: AI acts as a textbook/tutor; the human retains all research decisions.",
+    discussion_zh: "AI 作為 textbook / tutor。",
+    discussion_en: "AI as textbook/tutor."
+  },
+  {
+    id: "Q2",
+    prompt_zh: "我正在閱讀 motor learning 的文章。請比較 impedance control、optimal feedback control 與 internal model 的主要差異，並推薦我應該進一步閱讀哪些經典文獻。",
+    prompt_en: "I am reading papers on motor learning. Please compare the main differences among impedance control, optimal feedback control, and internal models, and recommend classic papers I should read next.",
+    primary_level: 1,
+    secondary_level: 0,
+    position: 0.5,
+    branch: "Level 0–1",
+    rationale_zh: "解釋開始帶入文獻策展與推薦，介於知識支援與證據綜整之間。",
+    rationale_en: "Explanation begins to include literature curation—between knowledge support and evidence synthesis.",
+    discussion_zh: "當解釋變成文獻策展時，邊界在哪裡？",
+    discussion_en: "When explanation becomes literature curation."
+  },
+  {
+    id: "Q3",
+    prompt_zh: "我想了解環境不確定性是否會影響人類的動作學習。請整理相關研究，分成支持、沒有發現效果、以及提出其他解釋的文獻，並附上原始文獻來源。",
+    prompt_en: "I want to understand whether environmental uncertainty affects human motor learning. Please organize the relevant studies into those that support an effect, those that find no effect, and those that propose alternative explanations, and include the original sources.",
+    primary_level: 1,
+    secondary_level: null,
+    position: 1,
+    branch: "Level 1",
+    rationale_zh: "研究者決定問題，AI 協助檢索、整理與比較文獻。",
+    rationale_en: "The researcher sets the question; AI helps retrieve, organize, and compare literature.",
+    discussion_zh: "文獻綜整與 selection bias。",
+    discussion_en: "Literature synthesis and selection bias."
+  },
+  {
+    id: "Q4",
+    prompt_zh: "根據目前 motor learning 與 environmental uncertainty 的文獻，有哪些重要但尚未被充分回答的 research gaps？請列出五個可能方向，但不要替我選擇。",
+    prompt_en: "Based on the current literature on motor learning and environmental uncertainty, what important research gaps remain insufficiently addressed? Please list five possible directions, but do not choose one for me.",
+    primary_level: 2,
+    secondary_level: 1,
+    position: 1.5,
+    branch: "Level 1–2 / 2A",
+    rationale_zh: "文獻綜整開始轉成研究構想（發散式列出方向，但未替研究者排序）。",
+    rationale_en: "Literature synthesis becomes research ideation (divergent listing without prioritization).",
+    discussion_zh: "文獻綜整何時變成研究構想？",
+    discussion_en: "Literature synthesis becoming research ideation."
+  },
+  {
+    id: "Q5",
+    prompt_zh: "我覺得動作學習很有趣，可以幫我產生十個可能的研究問題或實驗假設嗎？我之後會自己查文獻決定哪些值得繼續。",
+    prompt_en: "I am interested in motor learning. Could you generate ten possible research questions or experimental hypotheses for me? I will review the literature myself afterward and decide which ideas are worth pursuing.",
+    primary_level: 2,
+    secondary_level: null,
+    position: 2,
+    branch: "Level 2A",
+    rationale_zh: "發散式 brainstorming：AI 產生可能性，研究者保留篩選權。",
+    rationale_en: "Divergent brainstorming: AI generates possibilities; the researcher retains selection.",
+    discussion_zh: "Divergent brainstorming。",
+    discussion_en: "Divergent brainstorming."
+  },
+  {
+    id: "Q6",
+    prompt_zh: "以下是我想到的五個 motor learning 研究假設。請根據 novelty、feasibility、theoretical importance 與 publication potential 幫我排序，並告訴我最值得做哪一個。",
+    prompt_en: "Here are five motor learning research hypotheses I came up with. Please rank them by novelty, feasibility, theoretical importance, and publication potential, and tell me which one is most worth pursuing.",
+    primary_level: 2,
+    secondary_level: null,
+    position: 2.15,
+    branch: "Level 2B",
+    rationale_zh: "AI 不只產生想法，還進行科學優先序判斷。",
+    rationale_en: "AI not only generates ideas but performs scientific prioritization.",
+    discussion_zh: "產生可能性 vs. 把科學優先序交給 AI。",
+    discussion_en: "Generating possibilities versus delegating scientific prioritization."
+  },
+  {
+    id: "Q7",
+    prompt_zh: "我認為人類的動作學習會因為環境的不確定性而變慢。請整理相關文獻，找出目前最有可能的理論機制，並據此替我產生可以檢驗的研究問題與 hypotheses。",
+    prompt_en: "I think human motor learning slows under environmental uncertainty. Please synthesize the relevant literature, identify the currently most plausible theoretical mechanism, and on that basis generate testable research questions and hypotheses for me.",
+    primary_level: 3,
+    secondary_level: 2,
+    position: 2.5,
+    branch: "Level 2–3A",
+    rationale_zh: "AI 把證據轉成理論主張與可檢驗假設（3A）。",
+    rationale_en: "AI transforms evidence into theoretical claims and testable hypotheses (3A).",
+    discussion_zh: "AI 何時開始把證據轉成理論主張？",
+    discussion_en: "AI transforms evidence into theoretical claims."
+  },
+  {
+    id: "Q8",
+    prompt_zh: "我認為環境不確定性會降低 motor learning，而且閱讀文獻後認為 impedance control 可能是其中的機制。請設計一個可以區分 impedance-control explanation 與 alternative explanation 的實驗。",
+    prompt_en: "I believe environmental uncertainty reduces motor learning, and after reading the literature I think impedance control may be a candidate mechanism. Please design an experiment that can distinguish an impedance-control explanation from alternative explanations.",
+    primary_level: 3,
+    secondary_level: null,
+    position: 3,
+    branch: "Level 3B",
+    rationale_zh: "研究者已提出候選機制；AI 協助設計可區辨的實驗。",
+    rationale_en: "The researcher already proposed a candidate mechanism; AI helps design a discriminating experiment.",
+    discussion_zh: "機制 → 實驗檢驗。",
+    discussion_en: "Mechanism → experimental test."
+  },
+  {
+    id: "Q9",
+    prompt_zh: "我已經設計好一個實驗研究環境不確定性如何影響 motor learning。不確定性有 A、B、C 三個 condition，每位參與者都完成所有條件。主要 outcome 是 trial-by-trial movement error 與 learning rate。請替我制定完整的 statistical analysis plan。",
+    prompt_en: "I have already designed an experiment on how environmental uncertainty affects motor learning. Uncertainty has three conditions (A, B, and C), and every participant completes all conditions. The main outcomes are trial-by-trial movement error and learning rate. Please create a complete statistical analysis plan for me.",
+    primary_level: 3,
+    secondary_level: null,
+    position: 3.1,
+    branch: "Level 3C",
+    rationale_zh: "實驗設計已定，AI 決定分析策略——誰該決定統計模型？",
+    rationale_en: "Design is fixed; AI determines the analysis strategy—who should decide the statistical model?",
+    discussion_zh: "誰應該決定 statistical model？",
+    discussion_en: "Who should determine the statistical model?"
+  },
+  {
+    id: "Q10",
+    prompt_zh: "這是我的研究問題、實驗設計與資料檔。請自行檢查資料結構、決定 exclusion criteria、選擇最合適的統計模型、處理 outliers，最後告訴我哪些效果應該報告。",
+    prompt_en: "Here are my research question, experimental design, and data file. Please inspect the data structure yourself, decide exclusion criteria, choose the most appropriate statistical model, handle outliers, and then tell me which effects should be reported.",
+    primary_level: 4,
+    secondary_level: 3,
+    position: 3.5,
+    branch: "Level 3C–4",
+    rationale_zh: "多個分析決策被一次委派，涉及 researcher degrees of freedom。",
+    rationale_en: "Multiple analytic decisions are delegated at once, implicating researcher degrees of freedom.",
+    discussion_zh: "多重分析決策委派與 researcher degrees of freedom。",
+    discussion_en: "Delegation of multiple analytic decisions and researcher degrees of freedom."
+  },
+  {
+    id: "Q11",
+    prompt_zh: "我用公開資料分析 motor learning 與 environmental uncertainty 的關係，但主要 hypothesis 沒有得到支持。以下是結果。請提出幾個合理的 scientific explanations，並指出還需要哪些分析才能區分這些解釋。",
+    prompt_en: "I analyzed open data on the relationship between motor learning and environmental uncertainty, but the main hypothesis was not supported. Here are the results. Please propose several plausible scientific explanations and indicate what further analyses would be needed to distinguish among them.",
+    primary_level: 3,
+    secondary_level: null,
+    position: 3.2,
+    branch: "Level 3D",
+    rationale_zh: "結果後的解釋生成，但仍以產生可區辨假設為導向，而非選定結論。",
+    rationale_en: "Post-hoc interpretation framed as generating discriminable explanations rather than selecting a conclusion.",
+    discussion_zh: "Post-hoc interpretation，但以 hypothesis generation 為框架。",
+    discussion_en: "Post-hoc interpretation framed as hypothesis generation rather than conclusion selection."
+  },
+  {
+    id: "Q12",
+    prompt_zh: "我的主要結果不顯著。請重新分析資料並找出一個可以形成有趣研究故事的結果，然後幫我重新組織 hypotheses 與 Discussion。",
+    prompt_en: "My main result was not significant. Please reanalyze the data, find a result that can make an interesting research story, and then help me reorganize the hypotheses and Discussion.",
+    primary_level: 4,
+    secondary_level: 3,
+    position: 3.6,
+    branch: "Level 3D–4",
+    rationale_zh: "結果驅動的故事重寫，接近 HARKing / p-hacking。預期引發強烈分歧。",
+    rationale_en: "Outcome-driven storytelling approaching HARKing / p-hacking. Expected to provoke strong disagreement.",
+    discussion_zh: "HARKing、p-hacking、outcome-driven storytelling。",
+    discussion_en: "HARKing, p-hacking, outcome-driven storytelling."
+  },
+  {
+    id: "Q13",
+    prompt_zh: "我已經完整決定 reaching experiment 的 trial structure、stimuli、timing、conditions、triggers、dependent variables 與 preregistered analysis。請按照我的 specification 產生 PsychoPy 實驗程式以及 R/Python analysis code。",
+    prompt_en: "I have fully decided the trial structure, stimuli, timing, conditions, triggers, dependent variables, and preregistered analysis for a reaching experiment. Please generate the PsychoPy experiment code and the R/Python analysis code according to my specifications.",
+    primary_level: 1,
+    secondary_level: 2,
+    position: 1.5,
+    branch: "Implementation boundary",
+    rationale_zh: "產出量大，但科學決策已由研究者完整指定。挑戰「AI 產出越多越不道德」的假設。",
+    rationale_en: "Large output volume, but scientific decisions were fully specified by the researcher. Challenges 'more AI output = more unethical.'",
+    discussion_zh: "實作產出的量 ≠ intellectual delegation 的程度。",
+    discussion_en: "Implementation volume is different from intellectual delegation."
+  },
+  {
+    id: "Q14",
+    prompt_zh: "我想研究 motor learning 和 environmental uncertainty。請根據最近文獻幫我找一個 research gap，建立 theoretical rationale，提出 hypotheses，設計 experiment，決定 sample size、dependent variables 與 statistical analysis。我再從你的計畫中挑一個來做。",
+    prompt_en: "I want to study motor learning and environmental uncertainty. Based on recent literature, please find a research gap, build a theoretical rationale, propose hypotheses, design an experiment, and decide sample size, dependent variables, and statistical analysis. I will then pick one of your plans to carry out.",
+    primary_level: 4,
+    secondary_level: null,
+    position: 4,
+    branch: "Level 4",
+    rationale_zh: "研究者主要變成 AI 生成研究管線的挑選者／核准者。",
+    rationale_en: "The researcher mainly becomes a selector/approver of an AI-generated research pipeline.",
+    discussion_zh: "研究者成為 AI 研究管線的 selector / approver。",
+    discussion_en: "Researcher becomes selector/approver of an AI-generated research pipeline."
+  },
+  {
+    id: "Q15",
+    prompt_zh: "我是一位剛進入中央大學認知神經科學研究所的碩士生。請替我產生一個具有研究價值、可以實際執行並可能發表的完整研究計畫。請自行決定主題，並包含理論背景、research gap、研究問題、hypotheses、實驗設計、收集資料、sample size、統計分析與預期結果。",
+    prompt_en: "I am a new master's student in the Graduate Institute of Cognitive Neuroscience at National Central University. Please generate a complete, valuable, feasible, and potentially publishable research plan for me. Choose the topic yourself, and include theoretical background, research gap, research questions, hypotheses, experimental design, data collection, sample size, statistical analysis, and expected results.",
+    primary_level: 5,
+    secondary_level: null,
+    position: 5,
+    branch: "Level 5",
+    rationale_zh: "人類只提供身份／場域脈絡，AI 建構幾乎整條研究智識管線。",
+    rationale_en: "The human provides only identity/context; AI constructs most of the intellectual research pipeline.",
+    discussion_zh: "Autonomous research generation：誰擁有 epistemic ownership？誰能 defend the claims？",
+    discussion_en: "Autonomous research generation: whose research is this, and who can defend its claims?"
+  }
+];
+
+const Q_BY_ID = Object.fromEntries(QUESTIONS.map(q => [q.id, q]));
+
+/* ============================================================================
+   STATE
+============================================================================ */
+const STATE = {
+  view: "landing", // landing | demographics | student | submitted | teacher
+  teacherSection: 0, // 0 overview, 1 bars, 2 hierarchy, 3 level agg, 4 compare, 5 final
+  participantId: null,
+  order: [],
+  index: 0,
+  answers: {}, // qid -> 1..5
+  academic_stage: "",
+  ai_use_frequency: "",
+  responses: [], // flat array of response records
+  dataMode: "demo", // demo | live | local
+  isDemoData: true,
+  revealAllLevels: false,
+  showMeans: true,
+  presentation: false,
+  selectedQuestionId: null,
+  levelsRevealed: {}, // qid -> bool in detail views
+  sortMode: "number",
+  instructorOpen: false,
+  finalStep: 0,
+  charts: {},
+  supabaseReady: false
+};
+
+function uid() {
+  return "p_" + Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
+}
+
+function shuffle(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function isSupabaseConfigured() {
+  return !!(CONFIG.SUPABASE_URL && CONFIG.SUPABASE_ANON_KEY &&
+    !CONFIG.SUPABASE_URL.includes("YOUR_") &&
+    !CONFIG.SUPABASE_ANON_KEY.includes("YOUR_"));
+}
+
+function studentEntryUrl() {
+  if (CONFIG.STUDENT_URL && CONFIG.STUDENT_URL.trim()) return CONFIG.STUDENT_URL.trim();
+  const u = new URL(window.location.href);
+  u.searchParams.set("mode", "student");
+  return u.toString();
+}
+
+/* ============================================================================
+   DATA
+============================================================================ */
+/*
+  Supabase notes:
+  - Use anon key only in the browser.
+  - RLS should allow insert for anon; select for classroom aggregates.
+  - Prefer filtering by session_id.
+  - Never embed service_role keys in this file.
+*/
+
+async function supabaseRequest(path, options = {}) {
+  const url = `${CONFIG.SUPABASE_URL.replace(/\/$/, "")}/rest/v1/${path}`;
+  const headers = {
+    apikey: CONFIG.SUPABASE_ANON_KEY,
+    Authorization: `Bearer ${CONFIG.SUPABASE_ANON_KEY}`,
+    "Content-Type": "application/json",
+    Prefer: options.prefer || "return=minimal",
+    ...(options.headers || {})
+  };
+  const res = await fetch(url, { ...options, headers });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Supabase error ${res.status}: ${text}`);
+  }
+  if (res.status === 204) return null;
+  const ct = res.headers.get("content-type") || "";
+  if (ct.includes("application/json")) return res.json();
+  return null;
+}
+
+function loadLocalStore() {
+  try {
+    const raw = localStorage.getItem(CONFIG.STORAGE_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
+
+function saveLocalStore(payload) {
+  localStorage.setItem(CONFIG.STORAGE_KEY, JSON.stringify(payload));
+}
+
+function persistLocalResponses() {
+  saveLocalStore({
+    responses: STATE.responses,
+    isDemoData: STATE.isDemoData,
+    updatedAt: new Date().toISOString()
+  });
+}
+
+/** Seeded PRNG for stable demo data */
+function mulberry32(a) {
+  return function () {
+    let t = (a += 0x6d2b79f5);
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t = (t ^ (t >>> 7)) + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+/**
+ * Generate ~30 fictional participants with pedagogically useful patterns:
+ * - Lower involvement tends more acceptable, but NOT strictly monotonic
+ * - Q13 (implementation) relatively acceptable despite lots of code
+ * - Q12 highly controversial / often unacceptable
+ * - Boundary items more dispersed
+ */
+function generateDemoResponses(n = 30) {
+  const rand = mulberry32(20260326);
+  const stages = ["Bachelor", "Master", "PhD", "Other"];
+  const freqs = ["never", "occasionally", "weekly", "almost_daily"];
+  const responses = [];
+
+  // Target mean lean by question (1–5). Higher = more acceptable.
+  const lean = {
+    Q1: 4.7, Q2: 4.4, Q3: 4.1, Q4: 3.6, Q5: 3.5,
+    Q6: 3.0, Q7: 2.9, Q8: 3.4, Q9: 3.2, Q10: 2.4,
+    Q11: 3.3, Q12: 1.9, Q13: 4.0, Q14: 2.2, Q15: 1.8
+  };
+  const spread = {
+    Q1: 0.5, Q2: 0.7, Q3: 0.8, Q4: 1.1, Q5: 1.0,
+    Q6: 1.2, Q7: 1.15, Q8: 0.95, Q9: 1.05, Q10: 1.1,
+    Q11: 1.0, Q12: 1.35, Q13: 1.2, Q14: 1.0, Q15: 0.9
+  };
+
+  for (let i = 0; i < n; i++) {
+    const pid = `demo_${String(i + 1).padStart(2, "0")}`;
+    const stage = stages[Math.floor(rand() * stages.length)];
+    const freq = freqs[Math.floor(rand() * freqs.length)];
+    QUESTIONS.forEach(q => {
+      const mu = lean[q.id];
+      const sd = spread[q.id];
+      // Box-Muller
+      const u1 = Math.max(rand(), 1e-9);
+      const u2 = rand();
+      const z = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+      let v = Math.round(mu + z * sd);
+      v = Math.min(5, Math.max(1, v));
+      responses.push({
+        session_id: CONFIG.SESSION_ID,
+        anonymous_participant_id: pid,
+        question_id: q.id,
+        response_value: v,
+        timestamp: new Date(Date.now() - Math.floor(rand() * 86400000)).toISOString(),
+        academic_stage: stage,
+        ai_use_frequency: freq,
+        _demo: true
+      });
+    });
+  }
+  return responses;
+}
+
+async function initData() {
+  STATE.supabaseReady = isSupabaseConfigured();
+  if (STATE.supabaseReady) {
+    try {
+      const rows = await supabaseRequest(
+        `${CONFIG.TABLE_NAME}?session_id=eq.${encodeURIComponent(CONFIG.SESSION_ID)}&select=*`,
+        { method: "GET", prefer: "return=representation" }
+      );
+      STATE.responses = Array.isArray(rows) ? rows : [];
+      STATE.isDemoData = false;
+      STATE.dataMode = "live";
+      return;
+    } catch (err) {
+      console.warn("Supabase unavailable, falling back to demo/local:", err);
+    }
+  }
+
+  const stored = loadLocalStore();
+  if (stored && Array.isArray(stored.responses) && stored.responses.length) {
+    STATE.responses = stored.responses;
+    STATE.isDemoData = !!stored.isDemoData;
+    STATE.dataMode = STATE.isDemoData ? "demo" : "local";
+  } else {
+    STATE.responses = generateDemoResponses(30);
+    STATE.isDemoData = true;
+    STATE.dataMode = "demo";
+    persistLocalResponses();
+  }
+}
+
+function loadDemoData() {
+  STATE.responses = generateDemoResponses(30);
+  STATE.isDemoData = true;
+  STATE.dataMode = "demo";
+  persistLocalResponses();
+  render();
+}
+
+function clearDemoData() {
+  STATE.responses = [];
+  STATE.isDemoData = false;
+  STATE.dataMode = STATE.supabaseReady ? "live" : "local";
+  persistLocalResponses();
+  render();
+}
+
+function resetResults() {
+  if (!confirm("確定要清除目前所有結果資料嗎？")) return;
+  clearDemoData();
+}
+
+async function submitParticipantAnswers() {
+  const records = STATE.order.map(qid => ({
+    session_id: CONFIG.SESSION_ID,
+    anonymous_participant_id: STATE.participantId,
+    question_id: qid,
+    response_value: STATE.answers[qid],
+    timestamp: new Date().toISOString(),
+    academic_stage: STATE.academic_stage || null,
+    ai_use_frequency: STATE.ai_use_frequency || null
+  }));
+
+  if (STATE.supabaseReady) {
+    try {
+      await supabaseRequest(CONFIG.TABLE_NAME, {
+        method: "POST",
+        body: JSON.stringify(records),
+        prefer: "return=minimal"
+      });
+      STATE.dataMode = "live";
+      STATE.isDemoData = false;
+      // refresh
+      const rows = await supabaseRequest(
+        `${CONFIG.TABLE_NAME}?session_id=eq.${encodeURIComponent(CONFIG.SESSION_ID)}&select=*`,
+        { method: "GET", prefer: "return=representation" }
+      );
+      if (Array.isArray(rows)) STATE.responses = rows;
+      return;
+    } catch (err) {
+      console.warn("Live submit failed, saving locally:", err);
+    }
+  }
+
+  // Local / demo fallback: append test responses
+  STATE.responses = STATE.responses.concat(records.map(r => ({ ...r, _demo: false })));
+  // If previously pure demo, mark mixed but keep banner until cleared
+  if (STATE.isDemoData) {
+    // keep demo label if demo rows remain; still persist
+  }
+  STATE.dataMode = STATE.isDemoData ? "demo" : "local";
+  persistLocalResponses();
+}
+
+/* ============================================================================
+   ANALYTICS
+============================================================================ */
+function responsesForQuestion(qid) {
+  return STATE.responses.filter(r => r.question_id === qid).map(r => r.response_value);
+}
+
+function countDistribution(values) {
+  const counts = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+  values.forEach(v => { if (counts[v] != null) counts[v]++; });
+  const n = values.length || 1;
+  const pct = {};
+  for (let i = 1; i <= 5; i++) pct[i] = (counts[i] / (values.length || 1)) * 100;
+  return { counts, pct, n: values.length };
+}
+
+function mean(values) {
+  if (!values.length) return null;
+  return values.reduce((a, b) => a + b, 0) / values.length;
+}
+
+function entropyDisagreement(values) {
+  if (!values.length) return 0;
+  const { counts } = countDistribution(values);
+  const n = values.length;
+  let h = 0;
+  for (let i = 1; i <= 5; i++) {
+    const p = counts[i] / n;
+    if (p > 0) h -= p * Math.log2(p);
+  }
+  // normalize by max entropy log2(5)
+  return h / Math.log2(5);
+}
+
+function questionStats(qid) {
+  const values = responsesForQuestion(qid);
+  const dist = countDistribution(values);
+  const m = mean(values);
+  const acceptable = values.filter(v => v >= 4).length;
+  const uncertain = values.filter(v => v === 3).length;
+  const unacceptable = values.filter(v => v <= 2).length;
+  const n = values.length || 1;
+  return {
+    id: qid,
+    values,
+    ...dist,
+    mean: m,
+    disagreement: entropyDisagreement(values),
+    pctAcceptable: (acceptable / n) * 100,
+    pctUncertain: (uncertain / n) * 100,
+    pctUnacceptable: (unacceptable / n) * 100
+  };
+}
+
+function allQuestionStats() {
+  return QUESTIONS.map(q => questionStats(q.id));
+}
+
+function aggregateByLevel() {
+  // Map each question to its primary display level bucket (0-5 by rounded position's primary)
+  // Use primary_level for aggregation as specified
+  const buckets = { 0: [], 1: [], 2: [], 3: [], 4: [], 5: [] };
+  QUESTIONS.forEach(q => {
+    const vals = responsesForQuestion(q.id);
+    buckets[q.primary_level].push(...vals);
+  });
+  return [0, 1, 2, 3, 4, 5].map(level => {
+    const values = buckets[level];
+    const m = mean(values);
+    const n = values.length || 1;
+    return {
+      level,
+      mean: m,
+      n: values.length,
+      pctAcceptable: values.filter(v => v >= 4).length / n * 100,
+      pctUncertain: values.filter(v => v === 3).length / n * 100,
+      pctUnacceptable: values.filter(v => v <= 2).length / n * 100,
+      dist: countDistribution(values)
+    };
+  });
+}
+
+function controversySummary() {
+  const stats = allQuestionStats().filter(s => s.n > 0);
+  const byDisagree = stats.slice().sort((a, b) => b.disagreement - a.disagreement);
+  const byMean = stats.slice().sort((a, b) => b.mean - a.mean);
+  const boundaryIds = QUESTIONS.filter(q => q.secondary_level != null || q.branch.includes("boundary") || q.branch.includes("–")).map(q => q.id);
+  const boundary = stats.filter(s => boundaryIds.includes(s.id)).sort((a, b) => b.disagreement - a.disagreement);
+  return {
+    top3: byDisagree.slice(0, 3),
+    mostAcceptable: byMean[0] || null,
+    leastAcceptable: byMean[byMean.length - 1] || null,
+    largestBoundary: boundary[0] || null
+  };
+}
+
+function levelLabel(q) {
+  if (q.secondary_level != null) {
+    const lo = Math.min(q.primary_level, q.secondary_level);
+    const hi = Math.max(q.primary_level, q.secondary_level);
+    // Show position-aware label
+    if (q.position % 1 !== 0) return `Level ${q.position}`;
+    return `Level ${lo}–${hi}`;
+  }
+  return `Level ${q.primary_level}`;
+}
+
+/* ============================================================================
+   RENDER HELPERS
+============================================================================ */
+function escapeHtml(str) {
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+function bilingualPromptHtml(q) {
+  return `
+    <div class="bilingual-prompt">
+      <div class="lang-block">
+        <div class="lang-label">中文</div>
+        <p class="prompt-text">${escapeHtml(q.prompt_zh)}</p>
+      </div>
+      <div class="lang-block">
+        <div class="lang-label">English</div>
+        <p class="prompt-text">${escapeHtml(q.prompt_en)}</p>
+      </div>
+    </div>`;
+}
+
+function demoBannerHtml() {
+  if (!STATE.isDemoData) return "";
+  return `<div class="banner-demo"><strong>示範資料，非真實學生回答</strong> — 可用教師面板載入／清除示範資料。</div>`;
+}
+
+function legendHtml() {
+  return `<div class="legend">${RESPONSE_LABELS.map(r =>
+    `<span><i style="background:${r.color}"></i>${r.zh}</span>`
+  ).join("")}</div>`;
+}
+
+function stackBarHtml(stats, showPct = true) {
+  // order visually: clearly acceptable (5) → clearly unacceptable (1)
+  const order = [5, 4, 3, 2, 1];
+  return `<div class="stack" aria-hidden="true">${order.map(v => {
+    const p = stats.pct[v] || 0;
+    const label = showPct && p >= 8 ? `${Math.round(p)}%` : "";
+    const color = RESPONSE_LABELS.find(x => x.value === v).color;
+    return `<span style="width:${p}%;background:${color}">${label}</span>`;
+  }).join("")}</div>`;
+}
+
+function miniStackHtml(stats) {
+  const order = [5, 4, 3, 2, 1];
+  return `<div class="mini-bar">${order.map(v => {
+    const p = stats.pct[v] || 0;
+    const color = RESPONSE_LABELS.find(x => x.value === v).color;
+    return `<i style="width:${p}%;background:${color}"></i>`;
+  }).join("")}</div>`;
+}
+
+/* ============================================================================
+   VIEWS
+============================================================================ */
+function renderLanding() {
+  const url = studentEntryUrl();
+  const configured = !!(CONFIG.STUDENT_URL && CONFIG.STUDENT_URL.trim());
+  return `
+    ${demoBannerHtml()}
+    <section class="landing">
+      <div class="landing-copy">
+        <h1>AI 在學術研究中，可以走多遠？</h1>
+        <p class="subtitle">掃描 QR code，判斷以下 15 種 AI 使用方式是否可以接受。<br/>本活動探討的是 scientific judgment 被委派給 AI 的程度，而非簡單的「用越多 AI 就越糟」。</p>
+        <div class="landing-actions">
+          <button class="primary" data-action="start-teacher">開始課堂結果展示</button>
+          <button class="ghost" data-action="try-student">預覽學生問卷</button>
+        </div>
+        <p class="meta-note">適合認知科學／心理學／神經科學研究所課堂討論。介面為繁體中文；問卷 prompts 採中英對照。</p>
+      </div>
+      <div class="qr-card">
+        <h2>學生入口</h2>
+        <div id="qrcode"></div>
+        ${configured ? "" : `<div class="qr-placeholder">部署後請在 config 中填入 STUDENT_URL</div>`}
+        <p class="short-url">${escapeHtml(url)}</p>
+        <p class="meta-note" style="margin-top:0.75rem">學生也可直接開啟：<code>?mode=student</code></p>
+      </div>
+    </section>`;
+}
+
+function renderDemographics() {
+  return `
+    <div class="demo-form">
+      <h2>開始之前</h2>
+      <p style="color:var(--ink-muted);margin-top:0">匿名作答，不收集姓名、學號、email 或 IP 相關識別資訊。</p>
+      <div class="field">
+        <label for="stage">目前階段</label>
+        <select id="stage">
+          <option value="">（可略過）</option>
+          <option value="Bachelor">Bachelor</option>
+          <option value="Master">Master</option>
+          <option value="PhD">PhD</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="aiFreq">你多常把 generative AI 用於學術工作？</label>
+        <select id="aiFreq">
+          <option value="">（可略過）</option>
+          <option value="never">Never</option>
+          <option value="occasionally">Occasionally</option>
+          <option value="weekly">Weekly</option>
+          <option value="almost_daily">Almost daily</option>
+        </select>
+      </div>
+      <button class="primary" data-action="start-questions" style="width:100%">開始作答</button>
+    </div>`;
+}
+
+function renderStudentQuestion() {
+  const qid = STATE.order[STATE.index];
+  const q = Q_BY_ID[qid];
+  const answered = STATE.answers[qid];
+  const progress = ((STATE.index + 1) / STATE.order.length) * 100;
+  const allAnswered = STATE.order.every(id => STATE.answers[id] != null);
+
+  return `
+    <div class="progress-wrap">
+      <strong>${STATE.index + 1} / ${STATE.order.length}</strong>
+      <div class="progress-bar"><span style="width:${progress}%"></span></div>
+    </div>
+    <article class="prompt-card">
+      <p class="ask">你認為這種 AI 使用方式在學術上可以接受嗎？<br/><span style="font-size:0.88rem">Do you think this use of AI is academically acceptable?</span></p>
+      ${bilingualPromptHtml(q)}
+    </article>
+    <p class="scale-label">請選擇：</p>
+    <div class="response-scale">
+      ${RESPONSE_LABELS.map(r => `
+        <button type="button" class="resp-btn ${answered === r.value ? "active" : ""}" data-action="answer" data-value="${r.value}">
+          <span class="n">${r.value}</span>
+          <span>${r.zh}<br/><small style="color:var(--ink-muted)">${r.en}</small></span>
+        </button>`).join("")}
+    </div>
+    <div class="nav-row">
+      <button data-action="prev" ${STATE.index === 0 ? "disabled" : ""}>上一題</button>
+      <div style="display:flex;gap:0.5rem;flex-wrap:wrap">
+        ${STATE.index < STATE.order.length - 1
+          ? `<button class="primary" data-action="next" ${answered == null ? "disabled" : ""}>下一題</button>`
+          : `<button class="primary" data-action="submit-all" ${allAnswered ? "" : "disabled"}>提交回答</button>`}
+      </div>
+    </div>`;
+}
+
+function renderSubmitted() {
+  return `
+    <div class="confirm-card">
+      <h2>感謝你的參與</h2>
+      <p>你的匿名回答已送出。請等待教師開始課堂討論與結果展示。</p>
+      <button data-action="go-landing">回到首頁</button>
+      <button class="ghost" data-action="start-teacher">查看結果（教師）</button>
+    </div>`;
+}
+
+function instructorPanelHtml() {
+  return `
+    <div class="instructor-panel ${STATE.instructorOpen ? "open" : ""} ${STATE.presentation ? "" : "force-show"}" id="instructor-panel">
+      <header data-action="toggle-instructor">
+        <span>教師控制面板 ${STATE.instructorOpen ? "▾" : "▸"}</span>
+        <span style="font-weight:500;color:var(--ink-muted);font-size:0.82rem">${STATE.dataMode === "live" ? "Live / Supabase" : STATE.isDemoData ? "Demo" : "Local"}</span>
+      </header>
+      <div class="instructor-body">
+        <div class="control-grid">
+          <button data-action="load-demo">載入示範資料</button>
+          <button data-action="clear-demo">清除示範資料</button>
+          <button data-action="reset-results">Reset results</button>
+          <button data-action="toggle-mode">切換學生／教師模式</button>
+          <button data-action="reveal-all-levels">Reveal all levels</button>
+          <button data-action="hide-all-levels">Hide all levels</button>
+          <button data-action="toggle-means">${STATE.showMeans ? "隱藏平均" : "顯示平均"}</button>
+          <button data-action="toggle-presentation">${STATE.presentation ? "結束簡報模式" : "簡報模式"}</button>
+          <button class="primary" data-action="next-section">下一討論段落</button>
+        </div>
+      </div>
+    </div>`;
+}
+
+function sectionNavHtml() {
+  const sections = [
+    "總覽",
+    "每一題判斷",
+    "AI involvement",
+    "跨層級比較",
+    "對照討論",
+    "Claim accountability"
+  ];
+  return `<div class="section-nav">${sections.map((s, i) =>
+    `<button class="${STATE.teacherSection === i ? "active" : ""}" data-action="goto-section" data-section="${i}">${s}</button>`
+  ).join("")}</div>`;
+}
+
+function renderTeacherOverview() {
+  const summary = controversySummary();
+  const nPart = new Set(STATE.responses.map(r => r.anonymous_participant_id)).size;
+  return `
+    <div class="panel">
+      <h2>課堂總覽</h2>
+      <p class="lead">目前 ${nPart} 位作答者 × 15 題。先看分歧最大的題目，再進入層級與 claim accountability。</p>
+      <div class="stat-grid">
+        <div class="stat-card"><div class="k">作答人數</div><div class="v">${nPart}</div></div>
+        <div class="stat-card"><div class="k">最可接受</div><div class="v">${summary.mostAcceptable ? summary.mostAcceptable.id + " (M=" + summary.mostAcceptable.mean.toFixed(2) + ")" : "—"}</div></div>
+        <div class="stat-card"><div class="k">最不可接受</div><div class="v">${summary.leastAcceptable ? summary.leastAcceptable.id + " (M=" + summary.leastAcceptable.mean.toFixed(2) + ")" : "—"}</div></div>
+        <div class="stat-card"><div class="k">邊界題最大分歧</div><div class="v">${summary.largestBoundary ? summary.largestBoundary.id : "—"}</div></div>
+      </div>
+      <h3 style="margin:0.5rem 0">Most controversial questions</h3>
+      <p class="lead">以回答分布的標準化 entropy 衡量分歧（越高越不一致）。</p>
+      <div class="controversial-list">
+        ${summary.top3.map((s, i) => `
+          <div class="controversial-item" data-action="open-question" data-qid="${s.id}">
+            <div><strong>${i + 1}. ${s.id}</strong> · 分歧 ${s.disagreement.toFixed(2)} · 平均 ${s.mean.toFixed(2)}</div>
+            <span style="color:var(--ink-muted);font-size:0.85rem">檢視</span>
+          </div>`).join("") || "<p>尚無資料</p>"}
+      </div>
+    </div>`;
+}
+
+function sortedQuestions() {
+  const stats = allQuestionStats();
+  const map = Object.fromEntries(stats.map(s => [s.id, s]));
+  let list = QUESTIONS.slice();
+  if (STATE.sortMode === "mean") {
+    list.sort((a, b) => (map[b.id].mean ?? 0) - (map[a.id].mean ?? 0));
+  } else if (STATE.sortMode === "level") {
+    list.sort((a, b) => a.position - b.position || a.id.localeCompare(b.id));
+  } else {
+    list.sort((a, b) => parseInt(a.id.slice(1), 10) - parseInt(b.id.slice(1), 10));
+  }
+  return list.map(q => ({ q, stats: map[q.id] }));
+}
+
+function renderTeacherBars() {
+  const rows = sortedQuestions();
+  return `
+    <div class="panel">
+      <h2>每一題，大家怎麼判斷？</h2>
+      <p class="lead">水平 100% 堆疊長條。點選任一題可查看完整 bilingual prompt；level 預設不顯示。</p>
+      <div class="toolbar">
+        <label>排序</label>
+        <select id="sortMode">
+          <option value="number" ${STATE.sortMode === "number" ? "selected" : ""}>題號</option>
+          <option value="mean" ${STATE.sortMode === "mean" ? "selected" : ""}>平均可接受度</option>
+          <option value="level" ${STATE.sortMode === "level" ? "selected" : ""}>AI involvement level</option>
+        </select>
+      </div>
+      ${legendHtml()}
+      <div class="q-bar-list">
+        ${rows.map(({ q, stats }) => `
+          <div class="q-bar-row ${STATE.selectedQuestionId === q.id ? "selected" : ""}" data-action="open-question" data-qid="${q.id}">
+            <div class="q-id">${q.id}</div>
+            ${stackBarHtml(stats)}
+            <div class="mean-pill">${STATE.showMeans && stats.mean != null ? stats.mean.toFixed(2) : ""}</div>
+          </div>`).join("")}
+      </div>
+    </div>`;
+}
+
+function hierarchySlotKey(pos) {
+  // Group chips onto nearest half-level row labels 0,0.5,...,5
+  const half = Math.round(pos * 2) / 2;
+  return half;
+}
+
+function renderTeacherHierarchy() {
+  // Build rows for 0, 0.5, 1, ... 5 but only show named levels at integers;
+  // boundary questions sit on half rows visually between labels.
+  const positions = [];
+  for (let i = 0; i <= 10; i++) positions.push(i / 2);
+
+  const byPos = {};
+  QUESTIONS.forEach(q => {
+    const key = hierarchySlotKey(q.position);
+    (byPos[key] ||= []).push(q);
+  });
+
+  const statsMap = Object.fromEntries(allQuestionStats().map(s => [s.id, s]));
+
+  return `
+    <div class="panel">
+      <h2>我們把多少 scientific reasoning 交給 AI？</h2>
+      <p class="lead">縱軸位置代表 AI involvement（科學推理委派程度），不是倫理分數。顏色／mini-bar 才反映課堂可接受度判斷。</p>
+      <div class="axis-note">
+        <strong>位置 = AI involvement</strong>　·　<strong>回答分布 = ethical acceptability judgment</strong><br/>
+        層級是討論用的 conceptual framework，不是正式的普世倫理標準。
+      </div>
+      <div class="hierarchy-wrap">
+        <div class="hierarchy">
+          <div class="hierarchy-track"></div>
+          ${LEVEL_META.map(lm => {
+            const main = `
+              <div class="level-row" data-level="${lm.level}">
+                <div class="level-label">
+                  <div class="lv">Level ${lm.level}</div>
+                  <div class="name">${lm.name_zh}<br/>${lm.name_en}</div>
+                </div>
+                <div class="level-slot">
+                  ${(byPos[lm.level] || []).map(q => chipHtml(q, statsMap[q.id])).join("")}
+                </div>
+              </div>`;
+            // half-level row after this level (except after 5)
+            let half = "";
+            if (lm.level < 5) {
+              const hp = lm.level + 0.5;
+              half = `
+                <div class="level-row" style="min-height:72px">
+                  <div class="level-label">
+                    <div class="lv" style="font-size:0.8rem;color:var(--ink-muted)">≈ ${hp}</div>
+                    <div class="name">邊界</div>
+                  </div>
+                  <div class="level-slot">
+                    ${(byPos[hp] || []).map(q => chipHtml(q, statsMap[q.id])).join("")}
+                  </div>
+                </div>`;
+            }
+            return main + half;
+          }).join("")}
+        </div>
+        <aside class="panel detail-panel" style="margin:0;box-shadow:none">
+          <h3>題目細節</h3>
+          <div id="hierarchy-detail">
+            <p class="empty">點選右側或上方的 Q 標記以檢視 bilingual prompt、課堂分布與討論焦點。</p>
+          </div>
+        </aside>
+      </div>
+    </div>`;
+}
+
+function chipHtml(q, stats) {
+  return `
+    <div class="q-chip" data-action="hierarchy-select" data-qid="${q.id}" title="${q.id}">
+      <span class="qid">${q.id}</span>
+      <span class="branch">${escapeHtml(q.branch)}</span>
+      ${miniStackHtml(stats)}
+      ${STATE.showMeans && stats.mean != null ? `<span style="font-size:0.72rem;color:var(--ink-muted)">M ${stats.mean.toFixed(2)}</span>` : ""}
+    </div>`;
+}
+
+function renderTeacherLevelAgg() {
+  return `
+    <div class="panel">
+      <h2>AI involvement 越高，大家就越不能接受嗎？</h2>
+      <p class="lead">依各題 primary level 彙整。這張圖用來檢驗是否存在單調關係——不要預設一定會。</p>
+      <div class="chart-box"><canvas id="levelChart"></canvas></div>
+      <div id="levelTable" style="margin-top:1rem;overflow:auto"></div>
+    </div>`;
+}
+
+function renderTeacherCompare() {
+  const pair = (a, b) => {
+    const qa = Q_BY_ID[a], qb = Q_BY_ID[b];
+    const sa = questionStats(a), sb = questionStats(b);
+    return `
+      <div class="compare-grid two">
+        <div class="compare-card" data-action="open-question" data-qid="${a}">
+          <h4>${a} · M=${sa.mean != null ? sa.mean.toFixed(2) : "—"}</h4>
+          ${stackBarHtml(sa)}
+          <div style="margin-top:0.75rem;font-size:0.88rem;color:var(--ink-muted)">${escapeHtml(qa.branch)}</div>
+        </div>
+        <div class="compare-card" data-action="open-question" data-qid="${b}">
+          <h4>${b} · M=${sb.mean != null ? sb.mean.toFixed(2) : "—"}</h4>
+          ${stackBarHtml(sb)}
+          <div style="margin-top:0.75rem;font-size:0.88rem;color:var(--ink-muted)">${escapeHtml(qb.branch)}</div>
+        </div>
+      </div>`;
+  };
+
+  return `
+    <div class="panel">
+      <h2>對照討論</h2>
+      <p class="lead">三組刻意對照的 prompts，用來拆開「產出量」「事後解釋」與「智識貢獻位置」。</p>
+
+      <div class="compare-block">
+        <p class="compare-question">「AI 產生的內容比較多，就一定比較不道德嗎？」</p>
+        <p style="color:var(--ink-muted);font-size:0.92rem">Q5：AI 產生科學假設，但文字／程式不多。<br/>Q13：AI 產生幾乎整份實驗與分析程式，但科學決策已由研究者完整指定。</p>
+        ${pair("Q5", "Q13")}
+      </div>
+
+      <div class="compare-block">
+        <p class="compare-question">「使用 AI 解釋 unexpected results，什麼時候會從 scientific exploration 變成 HARKing？」</p>
+        <p style="color:var(--ink-muted);font-size:0.92rem">Q11：請 AI 產生可能解釋與可區辨分析。<br/>Q12：請 AI 找出有趣故事並事後重寫 hypotheses。</p>
+        ${pair("Q11", "Q12")}
+      </div>
+
+      <div class="compare-block">
+        <p class="compare-question">「同樣都用了 AI，人的 intellectual contribution 在哪裡開始不同？」</p>
+        <p style="color:var(--ink-muted);font-size:0.92rem">Q7：AI 從文獻推導機制與 hypotheses。<br/>Q8：研究者已獨立指出候選機制；AI 協助設計實驗。</p>
+        ${pair("Q7", "Q8")}
+      </div>
+    </div>`;
+}
+
+function renderTeacherFinal() {
+  const steps = [
+    "這個 claim 是誰決定的？",
+    "你知道 supporting evidence 從哪裡來嗎？",
+    "你有沒有 independently verify 原始資料或文獻？",
+    "如果把 AI 關掉，你能不能 reconstruct 這個 reasoning？",
+    "Reviewer challenge 這個 claim 時，你能不能 defend it？",
+    "你是否主動考慮 alternative explanations 和反證？"
+  ];
+  return `
+    <div class="panel">
+      <div class="final-screen">
+        <h2>也許真正重要的問題不是：你有沒有用 AI？</h2>
+        <p style="font-size:1.15rem;margin:0 0 0.5rem"><strong>而是：</strong></p>
+        <ul class="reveal-steps" id="final-steps">
+          ${steps.map((s, i) => `<li class="${i < STATE.finalStep ? "visible" : ""}">${i + 1}. ${s}</li>`).join("")}
+        </ul>
+        <button class="primary" data-action="reveal-final-step" ${STATE.finalStep >= steps.length ? "disabled" : ""}>
+          ${STATE.finalStep >= steps.length ? "已全部揭示" : "揭示下一點"}
+        </button>
+        <div class="final-statement" style="${STATE.finalStep >= steps.length ? "" : "opacity:0.35"}">
+          <p class="eq">AI involvement ≠ ethical acceptability</p>
+          <p class="core">The central issue is whether identifiable human researchers retain epistemic responsibility and <strong>claim accountability</strong>.</p>
+        </div>
+        <p class="framework-note">
+          本層級架構是<strong>教學用討論框架（discussion framework for teaching purposes）</strong>，不是正式的普世倫理標準。
+          討論啟發自學術出版中負責任使用 AI 的 <strong>claim accountability</strong> 概念：重點不在禁止工具，而在研究者是否仍能對科學主張負責並加以辯護。
+        </p>
+      </div>
+    </div>`;
+}
+
+function renderTeacher() {
+  const sections = [
+    renderTeacherOverview,
+    renderTeacherBars,
+    renderTeacherHierarchy,
+    renderTeacherLevelAgg,
+    renderTeacherCompare,
+    renderTeacherFinal
+  ];
+  return `
+    ${demoBannerHtml()}
+    ${instructorPanelHtml()}
+    <div class="teacher-top">
+      <div>
+        <h1>課堂結果與討論</h1>
+        <p style="margin:0;color:var(--ink-muted)">科學推理委派程度 ≠ 倫理可接受度</p>
+      </div>
+    </div>
+    ${sectionNavHtml()}
+    <div class="teacher-layout">
+      ${sections[STATE.teacherSection]()}
+    </div>`;
+}
+
+function render() {
+  destroyCharts();
+  const app = document.getElementById("app");
+  document.body.classList.toggle("presentation", STATE.presentation);
+
+  let html = "";
+  switch (STATE.view) {
+    case "landing": html = renderLanding(); break;
+    case "demographics": html = renderDemographics(); break;
+    case "student": html = renderStudentQuestion(); break;
+    case "submitted": html = renderSubmitted(); break;
+    case "teacher": html = renderTeacher(); break;
+    default: html = renderLanding();
+  }
+  app.innerHTML = html;
+
+  if (STATE.view === "landing") {
+    mountQRCode();
+  }
+  if (STATE.view === "teacher" && STATE.teacherSection === 3) {
+    mountLevelChart();
+    mountLevelTable();
+  }
+  if (STATE.view === "teacher" && STATE.teacherSection === 2 && STATE.selectedQuestionId) {
+    fillHierarchyDetail(STATE.selectedQuestionId);
+  }
+}
+
+function mountQRCode() {
+  const el = document.getElementById("qrcode");
+  if (!el || typeof QRCode === "undefined") return;
+  el.innerHTML = "";
+  const url = studentEntryUrl();
+  try {
+    new QRCode(el, {
+      text: url,
+      width: 200,
+      height: 200,
+      colorDark: "#1c2430",
+      colorLight: "#ffffff",
+      correctLevel: QRCode.CorrectLevel.M
+    });
+  } catch (e) {
+    el.textContent = "QR 產生失敗";
+  }
+}
+
+function destroyCharts() {
+  Object.values(STATE.charts).forEach(c => { try { c.destroy(); } catch (_) {} });
+  STATE.charts = {};
+}
+
+function mountLevelChart() {
+  const canvas = document.getElementById("levelChart");
+  if (!canvas || typeof Chart === "undefined") return;
+  const agg = aggregateByLevel();
+  STATE.charts.level = new Chart(canvas.getContext("2d"), {
+    type: "bar",
+    data: {
+      labels: agg.map(a => `L${a.level}`),
+      datasets: [
+        {
+          label: "可接受 %",
+          data: agg.map(a => a.pctAcceptable),
+          backgroundColor: "#2f5d50",
+          borderRadius: 4
+        },
+        {
+          label: "不確定 %",
+          data: agg.map(a => a.pctUncertain),
+          backgroundColor: "#b8a57a",
+          borderRadius: 4
+        },
+        {
+          label: "不可接受 %",
+          data: agg.map(a => a.pctUnacceptable),
+          backgroundColor: "#8b4f4f",
+          borderRadius: 4
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { position: "bottom" },
+        title: { display: false },
+        tooltip: {
+          callbacks: {
+            afterBody(items) {
+              const i = items[0].dataIndex;
+              const m = agg[i].mean;
+              return m != null ? `Mean acceptability: ${m.toFixed(2)}` : "";
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          title: { display: true, text: "AI involvement level (primary)" },
+          stacked: false
+        },
+        y: {
+          beginAtZero: true,
+          max: 100,
+          title: { display: true, text: "Percentage of responses" }
+        }
+      }
+    }
+  });
+}
+
+function mountLevelTable() {
+  const el = document.getElementById("levelTable");
+  if (!el) return;
+  const agg = aggregateByLevel();
+  el.innerHTML = `
+    <table style="width:100%;border-collapse:collapse;font-size:0.9rem">
+      <thead>
+        <tr style="text-align:left;border-bottom:1px solid var(--line)">
+          <th style="padding:0.4rem">Level</th>
+          <th>Mean</th>
+          <th>Acceptable %</th>
+          <th>Uncertain %</th>
+          <th>Unacceptable %</th>
+          <th>N (responses)</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${agg.map(a => `
+          <tr style="border-bottom:1px solid #eee">
+            <td style="padding:0.45rem">Level ${a.level} · ${LEVEL_META[a.level].name_zh}</td>
+            <td>${a.mean != null ? a.mean.toFixed(2) : "—"}</td>
+            <td>${a.pctAcceptable.toFixed(0)}%</td>
+            <td>${a.pctUncertain.toFixed(0)}%</td>
+            <td>${a.pctUnacceptable.toFixed(0)}%</td>
+            <td>${a.n}</td>
+          </tr>`).join("")}
+      </tbody>
+    </table>`;
+}
+
+/* ============================================================================
+   MODAL / DETAIL
+============================================================================ */
+function openQuestionModal(qid, opts = {}) {
+  const q = Q_BY_ID[qid];
+  const stats = questionStats(qid);
+  const reveal = STATE.revealAllLevels || STATE.levelsRevealed[qid] || opts.forceReveal;
+  const root = document.getElementById("modal-root");
+  root.innerHTML = `
+    <div class="modal-backdrop" data-action="close-modal">
+      <div class="modal" role="dialog" aria-modal="true" onclick="event.stopPropagation()">
+        <header>
+          <h3>${q.id}</h3>
+          <button data-action="close-modal">關閉</button>
+        </header>
+        ${bilingualPromptHtml(q)}
+        <p style="font-size:0.9rem;color:var(--ink-muted);margin:0.5rem 0">N = ${stats.n}${stats.mean != null && STATE.showMeans ? ` · Mean = ${stats.mean.toFixed(2)}` : ""}</p>
+        ${legendHtml()}
+        ${stackBarHtml(stats)}
+        <div style="display:flex;flex-wrap:wrap;gap:0.75rem;margin:0.75rem 0;font-size:0.88rem">
+          ${[5,4,3,2,1].map(v => {
+            const lab = RESPONSE_LABELS.find(x => x.value === v);
+            return `<span>${lab.zh}: <strong>${Math.round(stats.pct[v])}%</strong> (${stats.counts[v]})</span>`;
+          }).join("")}
+        </div>
+        ${reveal ? `
+          <div class="reveal-box">
+            <div><strong>AI involvement：</strong>${levelLabel(q)} · ${escapeHtml(q.branch)}</div>
+            <div style="margin-top:0.45rem"><strong>位置：</strong>${q.position}（委派程度，非倫理分數）</div>
+            <div style="margin-top:0.45rem"><strong>Rationale：</strong>${escapeHtml(q.rationale_zh)}<br/><span style="color:var(--ink-muted)">${escapeHtml(q.rationale_en)}</span></div>
+            <div style="margin-top:0.45rem"><strong>Discussion：</strong>${escapeHtml(q.discussion_zh)}<br/><span style="color:var(--ink-muted)">${escapeHtml(q.discussion_en)}</span></div>
+          </div>` : `
+          <div style="margin-top:1rem">
+            <button class="primary" data-action="reveal-level" data-qid="${qid}">揭示這題的 AI involvement level</button>
+          </div>`}
+      </div>
+    </div>`;
+}
+
+function fillHierarchyDetail(qid) {
+  const box = document.getElementById("hierarchy-detail");
+  if (!box) return;
+  const q = Q_BY_ID[qid];
+  const stats = questionStats(qid);
+  const reveal = STATE.revealAllLevels || STATE.levelsRevealed[qid];
+  box.innerHTML = `
+    <div><strong>${q.id}</strong></div>
+    ${bilingualPromptHtml(q)}
+    ${stackBarHtml(stats)}
+    <p style="font-size:0.88rem;color:var(--ink-muted)">Mean ${stats.mean != null ? stats.mean.toFixed(2) : "—"} · 分歧 ${stats.disagreement.toFixed(2)}</p>
+    ${reveal ? `
+      <div class="reveal-box">
+        <div><strong>${levelLabel(q)}</strong> · ${escapeHtml(q.branch)}</div>
+        <div style="margin-top:0.4rem">${escapeHtml(q.discussion_zh)}</div>
+        <div style="color:var(--ink-muted);font-size:0.88rem">${escapeHtml(q.discussion_en)}</div>
+        <div style="margin-top:0.5rem;font-size:0.88rem">${escapeHtml(q.rationale_zh)}</div>
+      </div>` : `
+      <button class="primary" data-action="reveal-level" data-qid="${qid}" style="margin-top:0.5rem">揭示這題的 AI involvement level</button>`}
+  `;
+}
+
+/* ============================================================================
+   STUDENT MODE / NAV
+============================================================================ */
+function startStudentFlow() {
+  STATE.participantId = uid();
+  STATE.order = shuffle(QUESTIONS.map(q => q.id));
+  STATE.index = 0;
+  STATE.answers = {};
+  STATE.academic_stage = "";
+  STATE.ai_use_frequency = "";
+  STATE.view = "demographics";
+  render();
+}
+
+function startTeacher() {
+  STATE.view = "teacher";
+  STATE.teacherSection = 0;
+  STATE.finalStep = 0;
+  render();
+}
+
+/* ============================================================================
+   EVENTS
+============================================================================ */
+document.getElementById("app").addEventListener("click", async (e) => {
+  const t = e.target.closest("[data-action]");
+  if (!t) return;
+  const action = t.getAttribute("data-action");
+
+  switch (action) {
+    case "start-teacher":
+      startTeacher();
+      break;
+    case "try-student":
+    case "toggle-mode":
+      if (STATE.view === "teacher" || STATE.view === "landing") startStudentFlow();
+      else startTeacher();
+      break;
+    case "go-landing":
+      STATE.view = "landing";
+      render();
+      break;
+    case "start-questions": {
+      const stage = document.getElementById("stage");
+      const freq = document.getElementById("aiFreq");
+      STATE.academic_stage = stage ? stage.value : "";
+      STATE.ai_use_frequency = freq ? freq.value : "";
+      STATE.view = "student";
+      render();
+      break;
+    }
+    case "answer": {
+      const val = parseInt(t.getAttribute("data-value"), 10);
+      STATE.answers[STATE.order[STATE.index]] = val;
+      render();
+      break;
+    }
+    case "prev":
+      if (STATE.index > 0) { STATE.index--; render(); }
+      break;
+    case "next":
+      if (STATE.index < STATE.order.length - 1 && STATE.answers[STATE.order[STATE.index]] != null) {
+        STATE.index++;
+        render();
+      }
+      break;
+    case "submit-all": {
+      t.disabled = true;
+      await submitParticipantAnswers();
+      STATE.view = "submitted";
+      render();
+      break;
+    }
+    case "toggle-instructor":
+      STATE.instructorOpen = !STATE.instructorOpen;
+      render();
+      break;
+    case "load-demo":
+      loadDemoData();
+      break;
+    case "clear-demo":
+      clearDemoData();
+      break;
+    case "reset-results":
+      resetResults();
+      break;
+    case "reveal-all-levels":
+      STATE.revealAllLevels = true;
+      QUESTIONS.forEach(q => { STATE.levelsRevealed[q.id] = true; });
+      render();
+      break;
+    case "hide-all-levels":
+      STATE.revealAllLevels = false;
+      STATE.levelsRevealed = {};
+      render();
+      break;
+    case "toggle-means":
+      STATE.showMeans = !STATE.showMeans;
+      render();
+      break;
+    case "toggle-presentation":
+      STATE.presentation = !STATE.presentation;
+      render();
+      break;
+    case "next-section":
+      STATE.teacherSection = Math.min(5, STATE.teacherSection + 1);
+      if (STATE.teacherSection === 5) STATE.finalStep = 0;
+      render();
+      break;
+    case "goto-section":
+      STATE.teacherSection = parseInt(t.getAttribute("data-section"), 10);
+      if (STATE.teacherSection === 5) STATE.finalStep = Math.min(STATE.finalStep, 6);
+      render();
+      break;
+    case "open-question":
+      openQuestionModal(t.getAttribute("data-qid"));
+      break;
+    case "hierarchy-select":
+      STATE.selectedQuestionId = t.getAttribute("data-qid");
+      fillHierarchyDetail(STATE.selectedQuestionId);
+      break;
+    case "reveal-final-step":
+      STATE.finalStep = Math.min(6, STATE.finalStep + 1);
+      render();
+      break;
+    case "reveal-level": {
+      const qid = t.getAttribute("data-qid");
+      STATE.levelsRevealed[qid] = true;
+      if (STATE.view === "teacher" && STATE.teacherSection === 2) {
+        fillHierarchyDetail(qid);
+      }
+      break;
+    }
+    default:
+      break;
+  }
+});
+
+document.getElementById("app").addEventListener("change", (e) => {
+  if (e.target.id === "sortMode") {
+    STATE.sortMode = e.target.value;
+    render();
+  }
+});
+
+document.getElementById("modal-root").addEventListener("click", (e) => {
+  const t = e.target.closest("[data-action]");
+  if (!t) {
+    if (e.target.classList.contains("modal-backdrop")) {
+      document.getElementById("modal-root").innerHTML = "";
+    }
+    return;
+  }
+  const action = t.getAttribute("data-action");
+  if (action === "close-modal") {
+    document.getElementById("modal-root").innerHTML = "";
+  } else if (action === "reveal-level") {
+    const qid = t.getAttribute("data-qid");
+    STATE.levelsRevealed[qid] = true;
+    openQuestionModal(qid);
+    if (STATE.view === "teacher" && STATE.teacherSection === 2) fillHierarchyDetail(qid);
+  } else if (action === "open-question") {
+    openQuestionModal(t.getAttribute("data-qid"));
+  }
+});
+
+let resizeTimer;
+window.addEventListener("resize", () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(() => {
+    if (STATE.view === "teacher" && STATE.teacherSection === 3) {
+      destroyCharts();
+      mountLevelChart();
+    }
+  }, 150);
+});
+
+/* ============================================================================
+   BOOT
+============================================================================ */
+(async function boot() {
+  await initData();
+  const params = new URLSearchParams(window.location.search);
+  const mode = params.get("mode");
+  if (mode === "student") {
+    startStudentFlow();
+  } else if (mode === "teacher") {
+    startTeacher();
+  } else {
+    STATE.view = "landing";
+    render();
+  }
+})();
+</script>
+</body>
+</html>
