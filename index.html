@@ -2017,15 +2017,25 @@ function generateDemoResponses(n = 30) {
   return responses;
 }
 
+function participantBaseId(raw) {
+  const id = String(raw || "");
+  const i = id.lastIndexOf("__");
+  // Stored as base__Q1 so unique(anonymous_participant_id) still allows 15 answers/person
+  if (i > 0 && /^Q\d+$/i.test(id.slice(i + 2))) return id.slice(0, i);
+  return id;
+}
+
+function countParticipants(rows = STATE.responses) {
+  return new Set(rows.map(r => participantBaseId(r.anonymous_participant_id)).filter(Boolean)).size;
+}
+
 function updateLiveMeta(rows) {
   STATE.responses = Array.isArray(rows) ? rows : [];
   STATE.isDemoData = false;
   STATE.dataMode = "live";
   STATE.liveLastRefresh = new Date().toISOString();
   STATE.liveError = null;
-  STATE.liveParticipantCount = new Set(
-    STATE.responses.map(r => r.anonymous_participant_id).filter(Boolean)
-  ).size;
+  STATE.liveParticipantCount = countParticipants(STATE.responses);
 }
 
 async function fetchLiveResponses() {
@@ -2131,7 +2141,8 @@ function resetResults() {
 async function submitParticipantAnswers() {
   const records = STATE.order.map(qid => ({
     session_id: CONFIG.SESSION_ID,
-    anonymous_participant_id: STATE.participantId,
+    // Append question id so each row is unique even if the DB column is marked Unique
+    anonymous_participant_id: `${STATE.participantId}__${qid}`,
     question_id: qid,
     response_value: STATE.answers[qid],
     timestamp: new Date().toISOString(),
@@ -2720,7 +2731,7 @@ function renderGovernanceLayers() {
 
 function renderTeacherOverview() {
   const summary = controversySummary();
-  const nPart = new Set(STATE.responses.map(r => r.anonymous_participant_id)).size;
+  const nPart = countParticipants(STATE.responses);
   return `
     <div class="panel">
       <h2>調查總覽</h2>
