@@ -2186,18 +2186,54 @@ function loadDemoData() {
 }
 
 function clearDemoData() {
+  stopLivePolling();
   STATE.responses = [];
   STATE.isDemoData = false;
   STATE.dataMode = STATE.supabaseReady ? "live" : "local";
+  STATE.liveParticipantCount = 0;
   persistLocalResponses();
-  if (STATE.supabaseReady) startLivePolling();
   render();
 }
 
-function resetResults() {
-  if (!confirm("確定要清除目前瀏覽器上的結果顯示嗎？（不會刪除 Supabase 雲端資料）")) return;
+async function deleteLiveSessionResponses() {
+  await supabaseRequest(
+    `${CONFIG.TABLE_NAME}?session_id=eq.${encodeURIComponent(CONFIG.SESSION_ID)}`,
+    { method: "DELETE", prefer: "return=minimal" }
+  );
+}
+
+async function resetResults() {
+  if (STATE.supabaseReady) {
+    const ok = confirm(
+      `確定要重設本場結果嗎？\n\n這會刪除雲端 session「${CONFIG.SESSION_ID}」的所有回答，並清空畫面。\n此操作無法復原。`
+    );
+    if (!ok) return;
+    stopLivePolling();
+    try {
+      await deleteLiveSessionResponses();
+      STATE.responses = [];
+      STATE.isDemoData = false;
+      STATE.dataMode = "live";
+      STATE.liveParticipantCount = 0;
+      STATE.liveError = null;
+      persistLocalResponses();
+      render();
+      startLivePolling();
+    } catch (err) {
+      console.warn("Cloud reset failed:", err);
+      alert("無法刪除雲端資料：" + (err.message || err) + "\n已暫停自動更新；畫面已先清空。");
+      STATE.responses = [];
+      STATE.isDemoData = false;
+      STATE.dataMode = "live";
+      STATE.liveParticipantCount = 0;
+      persistLocalResponses();
+      render();
+    }
+    return;
+  }
+
+  if (!confirm("確定要清除目前所有結果資料嗎？")) return;
   clearDemoData();
-  if (STATE.supabaseReady) refreshLiveData({ silent: true });
 }
 
 async function submitParticipantAnswers() {
@@ -2599,7 +2635,7 @@ function instructorPanelHtml() {
           <button class="primary" data-action="refresh-live" ${STATE.supabaseReady ? "" : "disabled"}>重新整理即時資料</button>
           <button data-action="load-demo">載入示範資料</button>
           <button data-action="clear-demo">清除示範資料</button>
-          <button data-action="reset-results">Reset results</button>
+          <button data-action="reset-results">Reset results（清空本場雲端）</button>
           <button data-action="toggle-mode">切換問卷／結果模式</button>
           <button data-action="reveal-all-levels">Reveal all levels</button>
           <button data-action="hide-all-levels">Hide all levels</button>
@@ -3508,9 +3544,14 @@ document.getElementById("app").addEventListener("click", async (e) => {
       break;
     case "clear-demo":
       clearDemoData();
+      if (STATE.supabaseReady) {
+        // Resume live feed after clearing demo overlay
+        startLivePolling();
+        refreshLiveData({ silent: true });
+      }
       break;
     case "reset-results":
-      resetResults();
+      await resetResults();
       break;
     case "reveal-all-levels":
       STATE.revealAllLevels = true;
