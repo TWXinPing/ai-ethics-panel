@@ -3,18 +3,21 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>AI 在學術研究中，可以走多遠？</title>
+<title>AI 在學術研究中的使用：委派、認識風險與治理</title>
 <!--
 ================================================================================
-README — AI Research Ethics Classroom Tool
+README — AI Use in Academic Research (Survey & Discussion Tool)
 ================================================================================
+
+Audience: lab meetings, graduate seminars, institute-wide surveys, or classroom
+discussions in cognitive science / psychology / neuroscience (and related fields).
 
 1) Run locally
    - Open this file directly in a browser (double-click index.html), or
    - Serve with any static server, e.g. `npx serve .` / Live Server.
 
 2) Change STUDENT_URL
-   - Edit CONFIG.STUDENT_URL below (e.g. your GitHub Pages student URL).
+   - Edit CONFIG.STUDENT_URL below (participant entry URL after deployment).
    - The landing-page QR code and short URL text use this value.
    - If empty, a visible placeholder is shown.
 
@@ -23,9 +26,9 @@ README — AI Research Ethics Classroom Tool
    - Settings → Pages → Deploy from branch (main / root).
    - Set CONFIG.STUDENT_URL to:
      https://YOUR_USERNAME.github.io/YOUR_REPO/?mode=student
-   - Teacher opens the same site without ?mode=student (or use ?mode=teacher).
+   - Facilitators open the same site without ?mode=student (or use ?mode=teacher).
 
-4) Connect Supabase for live classroom responses
+4) Connect Supabase for live group responses
    - Create a project at https://supabase.com
    - Create table `ai_ethics_responses` (SQL below).
    - Enable anonymous INSERT/SELECT via RLS (see comments in CONFIG/DATA).
@@ -47,11 +50,11 @@ Suggested schema:
 
   alter table ai_ethics_responses enable row level security;
 
-  -- Allow anonymous inserts (students submitting)
+  -- Allow anonymous inserts (participants submitting)
   create policy "anon_insert" on ai_ethics_responses
     for insert to anon with check (true);
 
-  -- Allow anonymous select for classroom aggregate display
+  -- Allow anonymous select for group aggregate display
   create policy "anon_select" on ai_ethics_responses
     for select to anon using (true);
 
@@ -1088,8 +1091,8 @@ const CONFIG = {
   // Supabase placeholders — leave empty to use Demo / localStorage mode
   SUPABASE_URL: "",
   SUPABASE_ANON_KEY: "",
-  SESSION_ID: "classroom-default",
-  STORAGE_KEY: "ai_ethics_classroom_v3",
+  SESSION_ID: "lab-meeting-default",
+  STORAGE_KEY: "ai_ethics_survey_v4",
   TABLE_NAME: "ai_ethics_responses"
 };
 
@@ -1665,7 +1668,7 @@ const QUESTIONS = [
     ethicalIssuesEn: ["code reliability", "blind execution of incorrect code"],
     epistemicRiskScore: 2.8,
     claimAccountabilityRisk: "low-to-moderate",
-    rationale_zh: "產出可能遠多於 Q5／Q7，但科學委派較低。教師重點：大量 AI 產出 ≠ 高科學委派。",
+    rationale_zh: "產出可能遠多於 Q5／Q7，但科學委派較低。討論重點：大量 AI 產出 ≠ 高科學委派。",
     rationale_en: "AI may generate more total content than in Q5 or Q7, but scientific delegation is lower. Teaching point: volume ≠ involvement.",
     discussion_zh: "挑戰「AI 產生愈多內容就愈有問題」。",
     discussion_en: "Challenges “more AI-generated content = more problematic.”"
@@ -1795,7 +1798,7 @@ function studentEntryUrl() {
 /*
   Supabase notes:
   - Use anon key only in the browser.
-  - RLS should allow insert for anon; select for classroom aggregates.
+  - RLS should allow insert for anon; select for group aggregates.
   - Prefer filtering by session_id.
   - Never embed service_role keys in this file.
 */
@@ -2141,7 +2144,7 @@ function bilingualPromptHtml(q) {
 
 function demoBannerHtml() {
   if (!STATE.isDemoData) return "";
-  return `<div class="banner-demo"><strong>示範資料，非真實學生回答</strong> — 可用教師面板載入／清除示範資料。</div>`;
+  return `<div class="banner-demo"><strong>示範資料，非真實參與者回答</strong> — 可用主持面板載入／清除示範資料。</div>`;
 }
 
 function legendHtml() {
@@ -2180,20 +2183,21 @@ function renderLanding() {
     ${demoBannerHtml()}
     <section class="landing">
       <div class="landing-copy">
-        <h1>AI 在學術研究中，可以走多遠？</h1>
-        <p class="subtitle">掃描 QR code，判斷以下 15 種 AI 使用方式是否可以接受。<br/>本活動探討的是：有多少<strong>具後果性的 scientific judgment</strong>被委派給 AI——而不是「用越多 AI 就越糟」。</p>
+        <h1>AI 在學術研究中的使用</h1>
+        <p class="kicker" style="margin:0 0 0.5rem;font-size:1.05rem;color:var(--accent-2);font-weight:600">委派 · 認識風險 · 治理<br/><span style="font-weight:500;font-size:0.92rem">Delegation · Epistemic Risk · Governance</span></p>
+        <p class="subtitle">掃描 QR code，匿名判斷 15 種 AI 使用情境是否可接受。<br/>接著一起討論：我們把多少<strong>具後果性的 scientific judgment</strong>委派給 AI、可能付出什麼認識成本、以及需要什麼治理回應——而不是「用越多 AI 就越糟」。</p>
         <div class="landing-actions">
-          <button class="primary" data-action="start-teacher">開始課堂結果展示</button>
-          <button class="ghost" data-action="try-student">預覽學生問卷</button>
+          <button class="primary" data-action="start-teacher">查看結果與討論</button>
+          <button class="ghost" data-action="try-student">開始匿名問卷</button>
         </div>
-        <p class="meta-note">適合認知科學／心理學／神經科學研究所課堂討論。介面為繁體中文；問卷 prompts 採中英對照。</p>
+        <p class="meta-note">適用於研究室 meeting、課程討論，或之後擴大至全所調查。介面為繁體中文；prompts 採中英對照。匿名、不收集姓名／學號／email。</p>
       </div>
       <div class="qr-card">
-        <h2>學生入口</h2>
+        <h2>參與者入口</h2>
         <div id="qrcode"></div>
         ${configured ? "" : `<div class="qr-placeholder">部署後請在 config 中填入 STUDENT_URL</div>`}
         <p class="short-url">${escapeHtml(url)}</p>
-        <p class="meta-note" style="margin-top:0.75rem">學生也可直接開啟：<code>?mode=student</code></p>
+        <p class="meta-note" style="margin-top:0.75rem">也可直接開啟：<code>?mode=student</code>（問卷）／<code>?mode=teacher</code>（結果）</p>
       </div>
     </section>`;
 }
@@ -2271,7 +2275,7 @@ function renderSubmitted() {
     <div class="panel" style="max-width:860px;margin:0 auto">
       <h2 style="font-family:var(--font-serif)">你剛剛其實回答的是其中一個問題</h2>
       <p style="color:var(--ink-muted);margin-top:0">You have just answered only one part of the problem.</p>
-      <p>你的匿名<strong>倫理可接受度</strong>判斷已送出。接下來課堂會引入另外三個不能互相取代的問題：</p>
+      <p>你的匿名<strong>倫理可接受度</strong>判斷已送出。接下來會引入另外三個不能互相取代的問題：</p>
       <div class="four-grid">
         <div class="four-box"><h4>1. Ethics / Research Integrity</h4><p>Is this practice normatively acceptable?<br/>這種做法在規範上可以接受嗎？</p></div>
         <div class="four-box"><h4>2. AI Delegation</h4><p>What scientific work or judgment was delegated to AI?<br/>什麼科學工作／判斷被委派給 AI？</p></div>
@@ -2280,7 +2284,7 @@ function renderSubmitted() {
       </div>
       <p style="font-size:1.05rem"><strong>這四個問題彼此相關，但不能互相取代。</strong><br/><span style="color:var(--ink-muted)">These are related questions, but they are not the same question.</span></p>
       <div style="display:flex;gap:0.6rem;flex-wrap:wrap;margin-top:1rem">
-        <button class="primary" data-action="start-teacher">開始課堂結果展示</button>
+        <button class="primary" data-action="start-teacher">查看結果與討論</button>
         <button data-action="go-landing">回到首頁</button>
       </div>
     </div>`;
@@ -2290,7 +2294,7 @@ function instructorPanelHtml() {
   return `
     <div class="instructor-panel ${STATE.instructorOpen ? "open" : ""} ${STATE.presentation ? "" : "force-show"}" id="instructor-panel">
       <header data-action="toggle-instructor">
-        <span>教師控制面板 ${STATE.instructorOpen ? "▾" : "▸"}</span>
+        <span>主持／結果面板 ${STATE.instructorOpen ? "▾" : "▸"}</span>
         <span style="font-weight:500;color:var(--ink-muted);font-size:0.82rem">${STATE.dataMode === "live" ? "Live / Supabase" : STATE.isDemoData ? "Demo" : "Local"}</span>
       </header>
       <div class="instructor-body">
@@ -2298,7 +2302,7 @@ function instructorPanelHtml() {
           <button data-action="load-demo">載入示範資料</button>
           <button data-action="clear-demo">清除示範資料</button>
           <button data-action="reset-results">Reset results</button>
-          <button data-action="toggle-mode">切換學生／教師模式</button>
+          <button data-action="toggle-mode">切換問卷／結果模式</button>
           <button data-action="reveal-all-levels">Reveal all levels</button>
           <button data-action="hide-all-levels">Hide all levels</button>
           <button data-action="toggle-means">${STATE.showMeans ? "隱藏平均" : "顯示平均"}</button>
@@ -2316,7 +2320,7 @@ function sectionNavHtml() {
     "四維區分",
     "層級說明",
     "委派連續體",
-    "認知成本",
+    "認識成本",
     "風險矩陣",
     "治理層層",
     "對照討論",
@@ -2387,7 +2391,7 @@ function renderTeacherLevelGuide() {
         </table>
       </div>
       <div class="level-guide-note">
-        本 Level 0–5 是<strong>課堂教學框架</strong>，不是經驗驗證量表，也不是 Ward van Zoonen 提出的分類法。Claim accountability 與治理概念應另行歸因於學術來源。
+        本 Level 0–5 是<strong>討論與調查用的概念框架</strong>，不是經驗驗證量表，也不是 Ward van Zoonen 提出的分類法。Claim accountability 與治理概念應另行歸因於學術來源。
       </div>
     </div>`;
 }
@@ -2405,7 +2409,7 @@ function renderFourDimensions() {
       </div>
       <p style="font-size:1.08rem"><strong>這四個問題彼此相關，但不能互相取代。</strong></p>
       <div class="axis-note" style="margin-top:1rem">
-        <strong>教學關鍵訊息</strong><br/>
+        <strong>討論關鍵訊息</strong><br/>
         • 一種做法可以在倫理上可接受，但仍有認識／知識生產成本。<br/>
         • 更高的 AI delegation 不自動等於更不道德。<br/>
         • 治理應回應「委派任務所造成的 epistemic risk 類型」，而不是只禁止更密集的 AI 使用。<br/><br/>
@@ -2449,13 +2453,13 @@ function renderRiskMatrix() {
   return `
     <div class="panel">
       <h2>Delegation × Potential Epistemic Risk</h2>
-      <p class="lead">X = AI Scientific Reasoning Delegation（L0→L5）；Y = 教學用潛在認識風險估計（Low→High）。<br/>
-      <strong>Illustrative teaching framework — not a validated empirical risk scale</strong><br/>
-      Y 軸<strong>不是</strong>由 level 機械換算，而是每題獨立指定的教學估計。</p>
+      <p class="lead">X = AI Scientific Reasoning Delegation（L0→L5）；Y = 討論用潛在認識風險估計（Low→High）。<br/>
+      <strong>Illustrative discussion framework — not a validated empirical risk scale</strong><br/>
+      Y 軸<strong>不是</strong>由 level 機械換算，而是每題獨立指定的概念估計。</p>
       <div class="risk-matrix-wrap"><canvas id="riskMatrixChart"></canvas></div>
       <p class="lead">例：Q13＝L2／中度風險；Q7＝L4／中高；Q12＝L4／高（含誠信風險）；Q15＝L5／高。</p>
       <h3 style="margin:1.25rem 0 0.5rem">附：跨層級可接受度（Ethics）</h3>
-      <p class="lead">依主要 level 彙整課堂倫理判斷——用來檢驗是否單調，不要預設一定會。</p>
+      <p class="lead">依主要 level 彙整參與者倫理判斷——用來檢驗是否單調，不要預設一定會。</p>
       <div class="chart-box"><canvas id="levelChart"></canvas></div>
       <div id="levelTable" style="margin-top:1rem;overflow:auto"></div>
     </div>`;
@@ -2490,8 +2494,8 @@ function renderTeacherOverview() {
   const nPart = new Set(STATE.responses.map(r => r.anonymous_participant_id)).size;
   return `
     <div class="panel">
-      <h2>課堂總覽</h2>
-      <p class="lead">目前 ${nPart} 位作答者 × 15 題。先看分歧最大的題目，再進入層級與 claim accountability。</p>
+      <h2>調查總覽</h2>
+      <p class="lead">目前 ${nPart} 位作答者 × 15 題。可先看分歧最大的題目，再進入四維框架與 claim accountability。</p>
       <div class="stat-grid">
         <div class="stat-card"><div class="k">作答人數</div><div class="v">${nPart}</div></div>
         <div class="stat-card"><div class="k">最可接受</div><div class="v">${summary.mostAcceptable ? summary.mostAcceptable.id + " (M=" + summary.mostAcceptable.mean.toFixed(2) + ")" : "—"}</div></div>
@@ -2533,7 +2537,7 @@ function renderTeacherBars() {
   return `
     <div class="panel">
       <h2>每一題，大家怎麼判斷倫理可接受度？</h2>
-      <p class="lead">這是 <strong>Ethics / Research Integrity</strong> 的課堂分布（100% 堆疊長條）。點選可看 bilingual prompt；Delegation／Epistemic risk／Governance 需另行揭示。</p>
+      <p class="lead">這是 <strong>Ethics / Research Integrity</strong> 的回答分布（100% 堆疊長條）。點選可看 bilingual prompt；Delegation／Epistemic risk／Governance 需另行揭示。</p>
       <div class="toolbar">
         <label>排序</label>
         <select id="sortMode">
@@ -2577,7 +2581,7 @@ function renderTeacherHierarchy() {
   return `
     <div class="panel">
       <h2>我們把多少 consequential scientific judgment 交給 AI？</h2>
-      <p class="lead">縱軸位置 = AI involvement（科學判斷委派），不是倫理分數；mini-bar = 課堂可接受度判斷。</p>
+      <p class="lead">縱軸位置 = AI involvement（科學判斷委派），不是倫理分數；mini-bar = 參與者可接受度判斷。</p>
       <div class="axis-note">
         <strong>位置 = AI involvement（delegation）</strong>　·　<strong>回答分布 = ethical acceptability</strong><br/>
         分類看「誰做出具後果性的科學決策」，不是產出量，也不是研究流程階段。
@@ -2648,7 +2652,7 @@ function renderTeacherHierarchy() {
         <aside class="panel detail-panel" style="margin:0;box-shadow:none">
           <h3>題目細節</h3>
           <div id="hierarchy-detail">
-            <p class="empty">點選 Q 標記以檢視 bilingual prompt、課堂分布、人／AI 分工與討論焦點。</p>
+            <p class="empty">點選 Q 標記以檢視 bilingual prompt、回答分布、人／AI 分工與討論焦點。</p>
           </div>
         </aside>
       </div>
@@ -2742,7 +2746,7 @@ function renderTeacherFinal() {
           <p class="eq" style="font-size:1.1rem;line-height:1.5">AI involvement ≠ ethical acceptability<br/>Academic acceptability ≠ epistemically cost-free<br/>Verification ≠ full claim accountability</p>
         </div>
         <p class="framework-note">
-          The Level 0–5 hierarchy is a teaching framework developed for this classroom discussion. It should not be presented as a validated scale or as a taxonomy directly proposed by Ward van Zoonen or other cited authors. Concepts such as claim accountability and governance responses should be attributed separately to their scholarly sources.
+          The Level 0–5 hierarchy is a discussion/survey framework developed for research-community conversations (e.g., lab meetings, seminars, institute surveys). It should not be presented as a validated scale or as a taxonomy directly proposed by Ward van Zoonen or other cited authors. Concepts such as claim accountability and governance responses should be attributed separately to their scholarly sources.
         </p>
       </div>
     </div>`;
@@ -2766,8 +2770,8 @@ function renderTeacher() {
     ${instructorPanelHtml()}
     <div class="teacher-top">
       <div>
-        <h1>課堂結果與討論</h1>
-        <p style="margin:0;color:var(--ink-muted)">Ethics · Delegation · Epistemic risk · Governance（四維分開）</p>
+        <h1>結果與討論</h1>
+        <p style="margin:0;color:var(--ink-muted)">Ethics · Delegation · Epistemic risk · Governance</p>
       </div>
     </div>
     ${sectionNavHtml()}
@@ -2862,7 +2866,7 @@ function mountRiskMatrix() {
             }
           }
         },
-        title: { display: true, text: "Illustrative teaching framework — not a validated risk scale" }
+        title: { display: true, text: "Illustrative discussion framework — not a validated risk scale" }
       },
       scales: {
         x: {
@@ -2978,7 +2982,7 @@ function teacherRevealHtml(q) {
   return `
     <div class="dim-block">
       <div class="dim-title">1. Ethics / Research Integrity</div>
-      課堂分布見上方長條。倫理判斷與 level <strong>分開</strong>。
+      上方長條為參與者倫理判斷分布。倫理判斷與 level <strong>分開</strong>。
       <div style="margin-top:0.35rem;font-size:0.88rem"><strong>Related integrity issues：</strong>${list(q.ethicalIssuesZh || q.ethicalIssuesEn)}</div>
     </div>
     <div class="dim-block">
