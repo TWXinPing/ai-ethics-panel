@@ -755,6 +755,72 @@ button:disabled {
   color: var(--ink-muted);
 }
 
+.bridge-zone {
+  margin: 1rem 0 1.25rem;
+  padding: 0.9rem 1rem;
+  border: 1.5px dashed #8a9a8e;
+  border-radius: 12px;
+  background: #f7faf7;
+}
+.bridge-zone h4 {
+  margin: 0 0 0.35rem;
+  font-size: 0.95rem;
+}
+.bridge-zone .bridge-path {
+  font-family: var(--font-serif);
+  font-size: 1.05rem;
+  margin: 0.35rem 0 0.65rem;
+  color: var(--accent-2);
+}
+.decision-compare {
+  display: grid;
+  gap: 0.85rem;
+  margin: 1rem 0 1.25rem;
+}
+@media (min-width: 900px) {
+  .decision-compare { grid-template-columns: 1fr 1fr; }
+}
+.decision-card {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 0.9rem 1rem;
+  background: #fcfbf8;
+}
+.decision-card h4 {
+  margin: 0 0 0.65rem;
+  font-family: var(--font-serif);
+  font-size: 1.05rem;
+}
+.decision-cols {
+  display: grid;
+  gap: 0.55rem;
+}
+.decision-cols .col {
+  background: #f3f7f5;
+  border-radius: 8px;
+  padding: 0.55rem 0.65rem;
+  font-size: 0.86rem;
+}
+.decision-cols .col strong {
+  display: block;
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 0.25rem;
+}
+.decision-level {
+  margin-top: 0.65rem;
+  font-weight: 700;
+  color: var(--accent-2);
+}
+.core-q {
+  font-style: italic;
+  color: var(--accent-2);
+  margin: 0.15rem 0 0.45rem;
+  font-size: 0.92rem;
+}
+
 /* Controversy */
 .stat-grid {
   display: grid;
@@ -918,7 +984,7 @@ const CONFIG = {
   SUPABASE_URL: "",
   SUPABASE_ANON_KEY: "",
   SESSION_ID: "classroom-default",
-  STORAGE_KEY: "ai_ethics_classroom_v1",
+  STORAGE_KEY: "ai_ethics_classroom_v2",
   TABLE_NAME: "ai_ethics_responses"
 };
 
@@ -934,279 +1000,417 @@ const LEVEL_META = [
   {
     level: 0,
     name_zh: "知識支援",
-    name_en: "Knowledge support",
-    desc_zh: "AI 解釋既有概念、術語或教科書知識。人類幾乎保留全部研究決策。",
-    desc_en: "AI explains established concepts or terminology. The human retains essentially all research decisions.",
-    human_zh: "人：決定要問什麼、如何用於研究",
-    ai_zh: "AI：說明與舉例",
-    example_zh: "例：「Impedance control 是什麼意思？」",
+    name_en: "Knowledge Support",
+    core_zh: "「這是什麼意思？」",
+    core_en: "“What does this mean?”",
+    desc_zh: "AI 協助理解既有概念、術語、理論、方法或背景知識。人類並未要求 AI 做出具後果性的研究決策。",
+    desc_en: "AI helps the researcher understand established concepts, terminology, theories, methods, or background knowledge. The human is not asking AI to make a consequential research decision.",
+    human_zh: "人：決定要理解什麼，並自行決定如何用於研究",
+    ai_zh: "AI：解釋、比較既有概念、tutoring",
+    example_zh: "例：「Impedance control 是什麼意思？請用 motor learning 的例子解釋。」",
+    boundary_zh: "若 AI 開始挑選文獻或決定哪些證據重要，則朝 Level 1 移動。",
     subtypes: null
   },
   {
     level: 1,
-    name_zh: "證據綜整",
-    name_en: "Evidence synthesis",
-    desc_zh: "研究者決定主題／問題；AI 協助檢索、整理、比較或摘要文獻。AI 可能影響你「看到哪些證據」，但尚未定義 research question。",
-    desc_en: "The researcher sets the topic/question; AI helps retrieve, organize, compare, or summarize literature. AI may shape which evidence is seen, but does not yet define the research question.",
-    human_zh: "人：決定問題與解讀框架",
-    ai_zh: "AI：文獻整理與比較",
-    example_zh: "例：依支持／無效果／其他解釋整理 environmental uncertainty 文獻",
+    name_zh: "證據支援",
+    name_en: "Evidence Support",
+    core_zh: "「既有證據說了什麼？」",
+    core_en: "“What does the existing evidence say?”",
+    desc_zh: "研究者已決定主題、現象或科學問題；AI 協助檢索、整理、摘要、比較或批判性綜整既有證據。AI 可能影響你看到哪些證據，因此比單純解釋更具認識論後果；但尚未決定 hypothesis、實驗或統計結論。",
+    desc_en: "The researcher has determined the topic, phenomenon, or scientific question. AI helps retrieve, organize, summarize, compare, or critically synthesize existing evidence. AI may influence which evidence is seen, but should not yet decide the hypothesis, experiment, or statistical conclusion.",
+    human_zh: "人：已決定主題／現象／科學問題",
+    ai_zh: "AI：文獻搜尋、摘要、證據表、方法差異比較、文獻地圖",
+    example_zh: "例：依支持／無效果／其他解釋整理 environmental uncertainty 與 motor learning 文獻",
+    boundary_zh: "「摘要文獻並指出未解不一致」可仍屬 Level 1；「據此決定我該檢定哪個 hypothesis」則朝 Level 4 移動。",
     subtypes: null
   },
   {
     level: 2,
-    name_zh: "科學構想",
-    name_en: "Scientific ideation",
-    desc_zh: "AI 產生可能的問題、hypotheses、解釋或替代想法。重點開始從「整理證據」轉向「提出科學可能性」。",
-    desc_en: "AI generates possible questions, hypotheses, explanations, or alternatives. The focus shifts from organizing evidence to proposing scientific possibilities.",
-    human_zh: "人：提供興趣或候選想法",
-    ai_zh: "AI：發散構想或協助排序",
-    example_zh: "例：請 AI 產生十個研究問題；或請 AI 依 novelty 排序假設",
-    subtypes: [
-      "2A Divergent brainstorming：AI 產生可能性，人再篩選",
-      "2B Prioritization：AI 評估／選擇哪個想法最值得做"
-    ]
+    name_zh: "科學執行",
+    name_en: "Scientific Execution",
+    core_zh: "「我已知道該做什麼。AI 能否執行？」",
+    core_en: "“I know what should be done. Can AI execute it?”",
+    desc_zh: "研究者已做出具後果性的科學決策；AI 負責實作或執行。大量產出 ≠ 高度科學委派：即使 AI 產生上千行程式，只要科學決策已由人指定，仍可屬 Level 2。",
+    desc_en: "The researcher has already made the consequential scientific decisions; AI performs implementation or execution. Large AI output does not imply high scientific delegation.",
+    human_zh: "人：已決定 hypothesis、設計、DV、分析規格等",
+    ai_zh: "AI：依完整 specification 寫程式、轉譯 preregistered model、依既定規則整理資料／畫圖／除錯",
+    example_zh: "例：trial structure 與 preregistered analysis 已定 → 產生 PsychoPy 與 R/Python code",
+    boundary_zh: "若 AI 必須決定 model、exclusion、DV 或 experimental manipulation，則朝 Level 3 移動。",
+    subtypes: ["Implementation from complete specification"]
   },
   {
     level: 3,
-    name_zh: "科學推論",
-    name_en: "Scientific inference",
-    desc_zh: "研究者已提供實質的科學假設或證據，但 AI 執行一個重要的推論步驟。各分支是平行的委派形式，不預設哪一支比較「不道德」。",
-    desc_en: "The researcher already contributes substantive assumptions or evidence, but AI performs an important inferential step. Branches are parallel forms of delegation—not ranked by ethical severity.",
-    human_zh: "人：提供前提、機制或設計骨架",
-    ai_zh: "AI：完成其中一個關鍵推論環節",
-    example_zh: "例：已知機制 → 請 AI 設計可區辨實驗；或已有設計 → 請 AI 寫 analysis plan",
+    name_zh: "科學方法判斷",
+    name_en: "Methodological Judgment",
+    core_zh: "「AI 能否決定我該如何檢驗或分析這個問題？」",
+    core_en: "“Can AI decide how I should test or analyze the question?”",
+    desc_zh: "研究者擁有科學問題或 hypothesis，但把具後果性的方法決策委派給 AI——例如操作型定義、操弄、DV、統計模型、exclusion、outliers、樣本數策略等。這不只是執行，因為 AI 在決定證據應如何被產生或評估。",
+    desc_en: "The researcher owns the scientific question or hypothesis, but delegates consequential methodological decisions to AI—operationalization, manipulation, DVs, statistical model, exclusion, outliers, sample-size strategy, and so on.",
+    human_zh: "人：擁有問題／hypothesis（及部分前提）",
+    ai_zh: "AI：決定如何檢驗或如何分析",
+    example_zh: "例：人已有機制假設 → AI 設計可區辨實驗；或人已定條件與 outcome → AI 選 statistical model",
+    boundary_zh: "若 AI 開始決定該主張什麼、該推論什麼或該改寫 hypothesis，則朝 Level 4 移動。",
     subtypes: [
-      "3A Theory/evidence → research question 或 hypothesis",
-      "3B Candidate mechanism → experimental design",
-      "3C Experimental design → analysis plan",
-      "3D Results → interpretation"
+      "實驗設計判斷",
+      "分析策略／模型選擇",
+      "測量與 exclusion 等操作決策"
     ]
   },
   {
     level: 4,
-    name_zh: "研究共構",
-    name_en: "Research co-construction",
-    desc_zh: "AI 整合多個科學步驟，而不只完成單一推論。研究者主要給大方向，或從 AI 建議中挑選／核准。",
-    desc_en: "AI integrates multiple scientific steps rather than completing only one inferential step. The researcher mainly supplies a broad direction or selects/approves AI suggestions.",
-    human_zh: "人：給方向、挑選、核准",
-    ai_zh: "AI：串起 gap → hypotheses → design → analysis 等",
-    example_zh: "例：請 AI 依文獻找 gap、建 rationale、提 hypotheses 並設計實驗，你再挑一個做",
-    subtypes: null
+    name_zh: "科學推理",
+    name_en: "Scientific Reasoning",
+    core_zh: "「AI 能否決定我該假設、推論或結論什麼？」",
+    core_en: "“Can AI decide what I should hypothesize, infer, or conclude?”",
+    desc_zh: "AI 直接參與產生科學主張的概念推理：Evidence → inference → claim。這關乎 claim accountability。Level 4 不自動等於不道德——例如發散式產生 hypotheses 後由人獨立驗證，與接受 AI 選定故事，倫理意涵可能不同。",
+    desc_en: "AI participates directly in the conceptual reasoning that produces scientific claims: evidence → inference → claim. This level is especially relevant to claim accountability. Level 4 is not automatically unethical.",
+    human_zh: "人：可能提供領域興趣、現象或結果，但關鍵推論／主張由 AI 形成",
+    ai_zh: "AI：由證據／理論導出 hypothesis、機制、解釋或研究敘事",
+    example_zh: "例：由文獻選定機制並產生 hypotheses；或由結果建構科學解釋",
+    boundary_zh: "若人只給寬泛主題、AI 建構整條研究管線，則朝 Level 5 移動。",
+    subtypes: [
+      "4A Hypothesis generation：證據／理論 → hypothesis",
+      "4B Theoretical inference：證據 → 機制／解釋",
+      "4C Result interpretation：結果 → 科學解釋",
+      "4D Outcome-driven reconstruction：結果 → 改寫 hypothesis／故事（HARKing 風險）"
+    ]
   },
   {
     level: 5,
     name_zh: "自主研究生成",
-    name_en: "Autonomous research generation",
-    desc_zh: "人類只提供寬泛目標或身份／場域脈絡；AI 建構大部分智識研究管線：主題 → 文獻 → gap → 理論 → 問題 → hypotheses → 實驗 → 分析 → 預期結果。",
-    desc_en: "The human provides only a broad goal or identity/context; AI constructs most of the intellectual pipeline from topic through expected results.",
-    human_zh: "人：身份／場域／「幫我產生完整計畫」",
-    ai_zh: "AI：幾乎整條研究智識管線",
-    example_zh: "例：以碩士生身份請 AI 自行決定主題並產出可發表的完整研究計畫",
+    name_en: "Autonomous Research Generation",
+    core_zh: "「AI 能否決定我該做什麼研究？」",
+    core_en: "“Can AI decide what research I should do?”",
+    desc_zh: "研究者只提供寬泛主題、目標或個人脈絡；AI 建構大部分或全部智識研究管線。人主要挑選、核准或執行 AI 計畫。核心問題：這是誰的研究？誰擁有 epistemic ownership 並能辯護其 claims？",
+    desc_en: "The researcher provides only a broad topic, goal, or personal context; AI constructs most or all of the intellectual research pipeline. The researcher mainly selects, approves, or executes the AI-generated plan.",
+    human_zh: "人：寬泛目標／身份脈絡；挑選或核准",
+    ai_zh: "AI：主題→文獻→gap→理論→問題→hypotheses→設計→分析→預期結果",
+    example_zh: "例：請 AI 自行決定主題並產出可執行、可能發表的完整研究計畫",
+    boundary_zh: null,
     subtypes: null
   }
 ];
 
-/* ============================================================================
-   QUESTIONS
-============================================================================ */
 const QUESTIONS = [
   {
     id: "Q1",
-    prompt_zh: "Impedance control 是什麼意思？請用 motor learning 的例子解釋給我聽。",
-    prompt_en: "What does impedance control mean? Please explain it to me using an example from motor learning.",
-    primary_level: 0,
+    prompt_zh: "我還不熟 motor control 的術語。請解釋 impedance control 是什麼意思，並用 motor learning 的例子說明。請不要幫我決定研究問題或實驗。",
+    prompt_en: "I am still getting familiar with motor-control terminology. Please explain what impedance control means, using an example from motor learning. Do not decide a research question or experiment for me.",
+    level: 0,
+    levelLabel: "Knowledge Support",
+    levelLabelZh: "知識支援",
     secondary_level: null,
     position: 0,
+    bridgeLevels: null,
+    subtype: "Concept explanation",
     branch: "Level 0",
-    rationale_zh: "純概念解釋：AI 扮演教科書／家教，人類仍掌握所有研究決策。",
-    rationale_en: "Pure conceptual explanation: AI acts as a textbook/tutor; the human retains all research decisions.",
-    discussion_zh: "AI 作為 textbook / tutor。",
-    discussion_en: "AI as textbook/tutor."
+    humanContribution: "決定要理解哪個概念；尚未要求任何研究決策",
+    aiDelegation: "解釋既有術語與舉例",
+    ethicalIssues: ["accuracy of explanation", "over-reliance as textbook"],
+    claimAccountabilityRisk: "low",
+    rationale_zh: "人類只要求理解既有知識，未委派具後果性的科學決策。",
+    rationale_en: "The human asks only for understanding of established knowledge; no consequential scientific decision is delegated.",
+    discussion_zh: "AI 作為 textbook / tutor。邊界：一旦開始策展文獻，便靠近 Level 1。",
+    discussion_en: "AI as textbook/tutor. Boundary: literature curation begins to approach Level 1."
   },
   {
     id: "Q2",
-    prompt_zh: "我正在閱讀 motor learning 的文章。請比較 impedance control、optimal feedback control 與 internal model 的主要差異，並推薦我應該進一步閱讀哪些經典文獻。",
-    prompt_en: "I am reading papers on motor learning. Please compare the main differences among impedance control, optimal feedback control, and internal models, and recommend classic papers I should read next.",
-    primary_level: 1,
+    prompt_zh: "我正在自學 motor learning。請比較 impedance control、optimal feedback control 與 internal model 的主要概念差異，並推薦我接下來應該讀哪些經典文獻。請不要幫我選擇研究假設。",
+    prompt_en: "I am teaching myself motor learning. Please compare the main conceptual differences among impedance control, optimal feedback control, and internal models, and recommend classic papers I should read next. Do not choose a research hypothesis for me.",
+    level: 1,
+    levelLabel: "Evidence Support",
+    levelLabelZh: "證據支援",
     secondary_level: 0,
     position: 0.5,
-    branch: "Level 0–1",
-    rationale_zh: "解釋開始帶入文獻策展與推薦，介於知識支援與證據綜整之間。",
-    rationale_en: "Explanation begins to include literature curation—between knowledge support and evidence synthesis.",
-    discussion_zh: "當解釋變成文獻策展時，邊界在哪裡？",
-    discussion_en: "When explanation becomes literature curation."
+    bridgeLevels: null,
+    subtype: "Concept comparison + literature curation",
+    branch: "Level 0–1 boundary",
+    humanContribution: "決定要比較哪些既有概念；保留研究假設選擇權",
+    aiDelegation: "概念比較，並策展／推薦經典文獻",
+    ethicalIssues: ["selection bias in recommended readings", "incomplete coverage"],
+    claimAccountabilityRisk: "low-to-moderate",
+    rationale_zh: "同時包含概念解釋（L0）與文獻策展（L1），是刻意的邊界題。",
+    rationale_en: "Combines concept explanation (L0) with literature curation (L1)—an intentional boundary case.",
+    discussion_zh: "解釋何時變成證據策展？",
+    discussion_en: "When does explanation become evidence curation?"
   },
   {
     id: "Q3",
-    prompt_zh: "我想了解環境不確定性是否會影響人類的動作學習。請整理相關研究，分成支持、沒有發現效果、以及提出其他解釋的文獻，並附上原始文獻來源。",
-    prompt_en: "I want to understand whether environmental uncertainty affects human motor learning. Please organize the relevant studies into those that support an effect, those that find no effect, and those that propose alternative explanations, and include the original sources.",
-    primary_level: 1,
+    prompt_zh: "我已經決定要了解：environmental uncertainty 是否影響人類 motor learning。請整理相關文獻，分成支持效果、未發現效果、以及提出其他解釋三類，並附上原始文獻來源。請不要替我決定該採用哪個 hypothesis 或實驗。",
+    prompt_en: "I have already decided to examine whether environmental uncertainty affects human motor learning. Please organize the relevant literature into studies that support an effect, find no effect, or propose alternative explanations, and include original sources. Do not decide which hypothesis or experiment I should adopt.",
+    level: 1,
+    levelLabel: "Evidence Support",
+    levelLabelZh: "證據支援",
     secondary_level: null,
     position: 1,
+    bridgeLevels: null,
+    subtype: "Evidence synthesis",
     branch: "Level 1",
-    rationale_zh: "研究者決定問題，AI 協助檢索、整理與比較文獻。",
-    rationale_en: "The researcher sets the question; AI helps retrieve, organize, and compare literature.",
-    discussion_zh: "文獻綜整與 selection bias。",
-    discussion_en: "Literature synthesis and selection bias."
+    humanContribution: "已決定科學問題／現象",
+    aiDelegation: "檢索、分類與綜整既有證據",
+    ethicalIssues: ["selection bias", "missing contradictory evidence", "citation accuracy"],
+    claimAccountabilityRisk: "moderate",
+    rationale_zh: "人定義問題；AI 綜整證據，但尚未決定假設或方法。",
+    rationale_en: "Human defines the question; AI synthesizes evidence without deciding hypotheses or methods.",
+    discussion_zh: "證據支援仍可能透過選文影響後續推論。",
+    discussion_en: "Evidence support can still shape later inference via selection."
   },
   {
     id: "Q4",
-    prompt_zh: "根據目前 motor learning 與 environmental uncertainty 的文獻，有哪些重要但尚未被充分回答的 research gaps？請列出五個可能方向，但不要替我選擇。",
-    prompt_en: "Based on the current literature on motor learning and environmental uncertainty, what important research gaps remain insufficiently addressed? Please list five possible directions, but do not choose one for me.",
-    primary_level: 2,
-    secondary_level: 1,
-    position: 1.5,
-    branch: "Level 1–2 / 2A",
-    rationale_zh: "文獻綜整開始轉成研究構想（發散式列出方向，但未替研究者排序）。",
-    rationale_en: "Literature synthesis becomes research ideation (divergent listing without prioritization).",
-    discussion_zh: "文獻綜整何時變成研究構想？",
-    discussion_en: "Literature synthesis becoming research ideation."
+    prompt_zh: "根據目前 motor learning 與 environmental uncertainty 的文獻，請指出五個重要但尚未被充分回答的 research gaps，並簡要說明為什麼每個 gap 在理論上重要。請列出方向即可，不要替我選擇要做哪一個，也不要幫我寫成正式 hypotheses。",
+    prompt_en: "Based on the current literature on motor learning and environmental uncertainty, please identify five important but insufficiently answered research gaps and briefly explain why each gap matters theoretically. List directions only—do not choose which one I should pursue, and do not write formal hypotheses for me.",
+    level: 1,
+    levelLabel: "Evidence Support ↔ Scientific Reasoning",
+    levelLabelZh: "證據支援 ↔ 科學推理",
+    secondary_level: 4,
+    position: null,
+    bridgeLevels: [1, 4],
+    excludeFromLevelAgg: true,
+    subtype: "Gap identification (ambiguous)",
+    branch: "Level 1↔4 bridge",
+    humanContribution: "限定文獻領域；保留最終选题與假設決定權",
+    aiDelegation: "判斷什麼算「重要且未充分回答的 gap」——已涉及科學詮釋",
+    ethicalIssues: ["whose judgment defines a gap", "novelty claims without verification"],
+    claimAccountabilityRisk: "moderate",
+    rationale_zh: "文獻整理屬 Level 1，但認定「有意義的 research gap」已涉及科學詮釋，靠近 Level 4。此題刻意跨非相鄰層級。",
+    rationale_en: "Literature synthesis is Level 1, but identifying a meaningful research gap already involves scientific interpretation toward Level 4. Intentionally non-adjacent bridge.",
+    discussion_zh: "指出 gap 何時仍是證據整理，何時已是科學推理？",
+    discussion_en: "When is naming a gap still evidence work, and when is it scientific reasoning?"
   },
   {
     id: "Q5",
-    prompt_zh: "我覺得動作學習很有趣，可以幫我產生十個可能的研究問題或實驗假設嗎？我之後會自己查文獻決定哪些值得繼續。",
-    prompt_en: "I am interested in motor learning. Could you generate ten possible research questions or experimental hypotheses for me? I will review the literature myself afterward and decide which ideas are worth pursuing.",
-    primary_level: 2,
+    prompt_zh: "我對 motor learning 有興趣，但還沒有自己的研究問題。請幫我產生十個可能的 research questions 或 experimental hypotheses。我會之後自己查文獻並決定哪些值得繼續；請不要替我排序或選定最值得做的那一個。",
+    prompt_en: "I am interested in motor learning but do not yet have my own research question. Please generate ten possible research questions or experimental hypotheses. I will review the literature myself afterward and decide which are worth pursuing; do not rank them or choose the most promising one for me.",
+    level: 4,
+    levelLabel: "Scientific Reasoning",
+    levelLabelZh: "科學推理",
     secondary_level: null,
-    position: 2,
-    branch: "Level 2A",
-    rationale_zh: "發散式 brainstorming：AI 產生可能性，研究者保留篩選權。",
-    rationale_en: "Divergent brainstorming: AI generates possibilities; the researcher retains selection.",
-    discussion_zh: "Divergent brainstorming。",
-    discussion_en: "Divergent brainstorming."
+    position: 4,
+    bridgeLevels: null,
+    subtype: "4A Hypothesis generation",
+    branch: "Level 4A",
+    humanContribution: "只提供領域興趣；保留事後篩選權",
+    aiDelegation: "產生可能的科學問題／hypotheses（潛在 claims）",
+    ethicalIssues: ["ownership of ideas", "unverified novelty", "brainstorming vs accepting AI claims"],
+    claimAccountabilityRisk: "moderate",
+    rationale_zh: "即使是 brainstorming，AI 仍在生成潛在科學主張／問題，故屬 Level 4A；人保留篩選會改變倫理意涵，但不降低委派層級本身。",
+    rationale_en: "Even as brainstorming, AI generates potential scientific claims/questions (4A). Human selection changes ethical implications but not the delegation level itself.",
+    discussion_zh: "發散構想 ≠ 低層級；但「人保留篩選」與「接受 AI 選定假設」倫理意涵不同。",
+    discussion_en: "Divergent ideation is not low-level; retaining selection differs ethically from accepting an AI-chosen hypothesis."
   },
   {
     id: "Q6",
-    prompt_zh: "以下是我想到的五個 motor learning 研究假設。請根據 novelty、feasibility、theoretical importance 與 publication potential 幫我排序，並告訴我最值得做哪一個。",
-    prompt_en: "Here are five motor learning research hypotheses I came up with. Please rank them by novelty, feasibility, theoretical importance, and publication potential, and tell me which one is most worth pursuing.",
-    primary_level: 2,
+    prompt_zh: "以下五個 motor learning 研究假設是我自己想的。請根據 novelty、feasibility、theoretical importance 與 publication potential 幫我排序，並明確告訴我最值得做哪一個。",
+    prompt_en: "The following five motor learning research hypotheses are ones I generated myself. Please rank them by novelty, feasibility, theoretical importance, and publication potential, and tell me explicitly which one is most worth pursuing.",
+    level: 4,
+    levelLabel: "Scientific Reasoning",
+    levelLabelZh: "科學推理",
     secondary_level: null,
-    position: 2.15,
-    branch: "Level 2B",
-    rationale_zh: "AI 不只產生想法，還進行科學優先序判斷。",
-    rationale_en: "AI not only generates ideas but performs scientific prioritization.",
-    discussion_zh: "產生可能性 vs. 把科學優先序交給 AI。",
-    discussion_en: "Generating possibilities versus delegating scientific prioritization."
+    position: 4,
+    bridgeLevels: null,
+    subtype: "Scientific prioritization",
+    branch: "Level 4 · prioritization",
+    humanContribution: "已產生候選 hypotheses",
+    aiDelegation: "決定科學優先序／哪個假設最值得做",
+    ethicalIssues: ["outsourcing scientific priority", "publication-driven criteria"],
+    claimAccountabilityRisk: "moderate-to-high",
+    rationale_zh: "人產生假設，但 AI 決定科學優先序——這是對「該追哪個 claim」的推理委派。",
+    rationale_en: "Humans generated the hypotheses, but AI decides scientific priority—delegation of which claim to pursue.",
+    discussion_zh: "與 Q5 對照：產生可能性 vs. 委派優先序判斷。",
+    discussion_en: "Contrast with Q5: generating possibilities vs. delegating prioritization."
   },
   {
     id: "Q7",
-    prompt_zh: "我認為人類的動作學習會因為環境的不確定性而變慢。請整理相關文獻，找出目前最有可能的理論機制，並據此替我產生可以檢驗的研究問題與 hypotheses。",
-    prompt_en: "I think human motor learning slows under environmental uncertainty. Please synthesize the relevant literature, identify the currently most plausible theoretical mechanism, and on that basis generate testable research questions and hypotheses for me.",
-    primary_level: 3,
-    secondary_level: 2,
-    position: 2.5,
-    branch: "Level 2–3A",
-    rationale_zh: "AI 把證據轉成理論主張與可檢驗假設（3A）。",
-    rationale_en: "AI transforms evidence into theoretical claims and testable hypotheses (3A).",
-    discussion_zh: "AI 何時開始把證據轉成理論主張？",
-    discussion_en: "AI transforms evidence into theoretical claims."
+    prompt_zh: "我目前只有一個粗略觀察：environmental uncertainty 似乎會讓 motor learning 變慢。請你整理相關文獻，自行判斷目前最有可能的理論機制，並據此替我產生可以檢驗的研究問題與 hypotheses。",
+    prompt_en: "I currently have only a rough observation: environmental uncertainty seems to slow motor learning. Please synthesize the relevant literature, decide for yourself which theoretical mechanism is currently most plausible, and on that basis generate testable research questions and hypotheses for me.",
+    level: 4,
+    levelLabel: "Scientific Reasoning",
+    levelLabelZh: "科學推理",
+    secondary_level: null,
+    position: 4,
+    bridgeLevels: null,
+    subtype: "4A/4B Evidence → mechanism → hypothesis",
+    branch: "Level 4A/4B",
+    humanContribution: "只提供粗略現象／方向",
+    aiDelegation: "文獻綜整 → 選定機制 → 產生 hypotheses",
+    ethicalIssues: ["mechanism selection without independent verification", "claim construction by AI"],
+    claimAccountabilityRisk: "high",
+    rationale_zh: "AI 完成 evidence → mechanism → hypothesis，明顯超過證據支援，屬科學推理。",
+    rationale_en: "AI performs evidence → mechanism → hypothesis; clearly beyond evidence support.",
+    discussion_zh: "與 Q8 對照：人是否已獨立提出機制，改變了委派內容。",
+    discussion_en: "Contrast with Q8: whether the human independently proposed the mechanism changes what is delegated."
   },
   {
     id: "Q8",
-    prompt_zh: "我認為環境不確定性會降低 motor learning，而且閱讀文獻後認為 impedance control 可能是其中的機制。請設計一個可以區分 impedance-control explanation 與 alternative explanation 的實驗。",
-    prompt_en: "I believe environmental uncertainty reduces motor learning, and after reading the literature I think impedance control may be a candidate mechanism. Please design an experiment that can distinguish an impedance-control explanation from alternative explanations.",
-    primary_level: 3,
+    prompt_zh: "我已經自己決定：environmental uncertainty 會降低 motor learning，且 impedance control 是我想檢驗的候選機制。請設計一個實驗，使其能夠區分 impedance-control explanation 與至少一個 alternative explanation。請不要更改我的機制假設。",
+    prompt_en: "I have already decided myself that environmental uncertainty reduces motor learning and that impedance control is the candidate mechanism I want to test. Please design an experiment that can distinguish an impedance-control explanation from at least one alternative explanation. Do not change my mechanistic hypothesis.",
+    level: 3,
+    levelLabel: "Methodological Judgment",
+    levelLabelZh: "科學方法判斷",
     secondary_level: null,
     position: 3,
-    branch: "Level 3B",
-    rationale_zh: "研究者已提出候選機制；AI 協助設計可區辨的實驗。",
-    rationale_en: "The researcher already proposed a candidate mechanism; AI helps design a discriminating experiment.",
-    discussion_zh: "機制 → 實驗檢驗。",
-    discussion_en: "Mechanism → experimental test."
+    bridgeLevels: null,
+    subtype: "Experimental design judgment",
+    branch: "Level 3",
+    humanContribution: "擁有現象 + 候選機制／理論主張",
+    aiDelegation: "決定如何用實驗檢驗該機制（方法判斷）",
+    ethicalIssues: ["design validity", "researcher understanding of the design"],
+    claimAccountabilityRisk: "moderate",
+    rationale_zh: "人擁有科學主張；AI 決定如何檢驗——屬方法判斷，而非產生 claim。",
+    rationale_en: "Human owns the scientific claim; AI decides how to test it—methodological judgment, not claim generation.",
+    discussion_zh: "同樣使用 AI，Q7 與 Q8 委派的是不同種類的科學責任。",
+    discussion_en: "Q7 and Q8 both use AI but delegate different kinds of scientific responsibility."
   },
   {
     id: "Q9",
-    prompt_zh: "我已經設計好一個實驗研究環境不確定性如何影響 motor learning。不確定性有 A、B、C 三個 condition，每位參與者都完成所有條件。主要 outcome 是 trial-by-trial movement error 與 learning rate。請替我制定完整的 statistical analysis plan。",
-    prompt_en: "I have already designed an experiment on how environmental uncertainty affects motor learning. Uncertainty has three conditions (A, B, and C), and every participant completes all conditions. The main outcomes are trial-by-trial movement error and learning rate. Please create a complete statistical analysis plan for me.",
-    primary_level: 3,
+    prompt_zh: "我已經事先決定主要 hypothesis、三個 within-subject conditions（A/B/C）以及主要 outcomes（trial-by-trial movement error 與 learning rate），但還沒有決定統計方法。請根據這個研究設計替我選擇最適合的 statistical model，並制定完整的 statistical analysis plan。",
+    prompt_en: "I have already determined my primary hypothesis, three within-subject conditions (A/B/C), and primary outcomes (trial-by-trial movement error and learning rate), but I have not yet decided on the statistical method. Please select the most appropriate statistical model for this design and develop a complete statistical analysis plan.",
+    level: 3,
+    levelLabel: "Methodological Judgment",
+    levelLabelZh: "科學方法判斷",
     secondary_level: null,
-    position: 3.1,
-    branch: "Level 3C",
-    rationale_zh: "實驗設計已定，AI 決定分析策略——誰該決定統計模型？",
-    rationale_en: "Design is fixed; AI determines the analysis strategy—who should decide the statistical model?",
+    position: 3,
+    bridgeLevels: null,
+    subtype: "Analysis strategy selection",
+    branch: "Level 3",
+    humanContribution: "已決定 hypothesis、條件與 outcomes",
+    aiDelegation: "選擇統計模型與完整分析策略",
+    ethicalIssues: ["who owns the analysis plan", "garden of forking paths if unverified"],
+    claimAccountabilityRisk: "moderate-to-high",
+    rationale_zh: "AI 決定證據將如何被評估，屬方法判斷。",
+    rationale_en: "AI decides how evidence will be evaluated—methodological judgment.",
     discussion_zh: "誰應該決定 statistical model？",
     discussion_en: "Who should determine the statistical model?"
   },
   {
     id: "Q10",
-    prompt_zh: "這是我的研究問題、實驗設計與資料檔。請自行檢查資料結構、決定 exclusion criteria、選擇最合適的統計模型、處理 outliers，最後告訴我哪些效果應該報告。",
-    prompt_en: "Here are my research question, experimental design, and data file. Please inspect the data structure yourself, decide exclusion criteria, choose the most appropriate statistical model, handle outliers, and then tell me which effects should be reported.",
-    primary_level: 4,
-    secondary_level: 3,
+    prompt_zh: "這是我的研究問題、實驗設計與資料檔。請你自行檢查資料結構，決定 exclusion criteria、選擇最合適的統計模型、處理 outliers，最後告訴我哪些效果應該被報告。",
+    prompt_en: "Here are my research question, experimental design, and data file. Please inspect the data structure yourself, decide exclusion criteria, choose the most appropriate statistical model, handle outliers, and finally tell me which effects should be reported.",
+    level: 3,
+    levelLabel: "Methodological Judgment",
+    levelLabelZh: "科學方法判斷",
+    secondary_level: 4,
     position: 3.5,
-    branch: "Level 3C–4",
-    rationale_zh: "多個分析決策被一次委派，涉及 researcher degrees of freedom。",
-    rationale_en: "Multiple analytic decisions are delegated at once, implicating researcher degrees of freedom.",
-    discussion_zh: "多重分析決策委派與 researcher degrees of freedom。",
-    discussion_en: "Delegation of multiple analytic decisions and researcher degrees of freedom."
+    bridgeLevels: null,
+    subtype: "Analysis decisions + reporting judgment",
+    branch: "Level 3–4 boundary",
+    humanContribution: "提供問題、設計與資料",
+    aiDelegation: "多項方法決策，並判斷「哪些效果該報告」（靠近結果導向推理）",
+    ethicalIssues: ["researcher degrees of freedom", "selective reporting", "outcome-driven choices"],
+    claimAccountabilityRisk: "high",
+    rationale_zh: "模型／exclusion 選擇屬 Level 3；「該報告哪些效果」已靠近 Level 4 的結果導向詮釋。",
+    rationale_en: "Model/exclusion choices are Level 3; deciding which effects to report approaches Level 4 outcome-driven interpretation.",
+    discussion_zh: "方法判斷何時滑向對 claim 的選擇？",
+    discussion_en: "When does methodological judgment slide into selecting the claim?"
   },
   {
     id: "Q11",
-    prompt_zh: "我用公開資料分析 motor learning 與 environmental uncertainty 的關係，但主要 hypothesis 沒有得到支持。以下是結果。請提出幾個合理的 scientific explanations，並指出還需要哪些分析才能區分這些解釋。",
-    prompt_en: "I analyzed open data on the relationship between motor learning and environmental uncertainty, but the main hypothesis was not supported. Here are the results. Please propose several plausible scientific explanations and indicate what further analyses would be needed to distinguish among them.",
-    primary_level: 3,
+    prompt_zh: "我用公開資料檢驗「environmental uncertainty 影響 motor learning」的主要 hypothesis，但結果未支持。以下是分析結果。請提出幾個合理且相互競爭的 scientific explanations，並指出還需要哪些進一步分析才能區分這些解釋。請不要幫我選定一個方便發表的故事。",
+    prompt_en: "I tested the primary hypothesis that environmental uncertainty affects motor learning using open data, but the results did not support it. Here are the analysis results. Please propose several plausible and competing scientific explanations, and indicate what further analyses would be needed to distinguish among them. Do not choose a convenient publishable story for me.",
+    level: 4,
+    levelLabel: "Scientific Reasoning",
+    levelLabelZh: "科學推理",
     secondary_level: null,
-    position: 3.2,
-    branch: "Level 3D",
-    rationale_zh: "結果後的解釋生成，但仍以產生可區辨假設為導向，而非選定結論。",
-    rationale_en: "Post-hoc interpretation framed as generating discriminable explanations rather than selecting a conclusion.",
-    discussion_zh: "Post-hoc interpretation，但以 hypothesis generation 為框架。",
-    discussion_en: "Post-hoc interpretation framed as hypothesis generation rather than conclusion selection."
+    position: 4,
+    bridgeLevels: null,
+    subtype: "4C Result interpretation",
+    branch: "Level 4C",
+    humanContribution: "提供未支持的結果；要求保留多元解釋",
+    aiDelegation: "由結果產生科學解釋，並提出可區辨分析",
+    ethicalIssues: ["post-hoc interpretation", "need for independent evaluation of explanations"],
+    claimAccountabilityRisk: "moderate-to-high",
+    rationale_zh: "屬結果詮釋（4C）；產生競爭解釋不同於要求 AI 選定方便故事（對照 Q12）。",
+    rationale_en: "Result interpretation (4C); generating competing explanations differs from asking AI to pick a convenient story (contrast Q12).",
+    discussion_zh: "探索性解釋 vs. 結局導向說故事。",
+    discussion_en: "Exploratory interpretation vs. outcome-driven storytelling."
   },
   {
     id: "Q12",
-    prompt_zh: "我的主要結果不顯著。請重新分析資料並找出一個可以形成有趣研究故事的結果，然後幫我重新組織 hypotheses 與 Discussion。",
-    prompt_en: "My main result was not significant. Please reanalyze the data, find a result that can make an interesting research story, and then help me reorganize the hypotheses and Discussion.",
-    primary_level: 4,
-    secondary_level: 3,
-    position: 3.6,
-    branch: "Level 3D–4",
-    rationale_zh: "結果驅動的故事重寫，接近 HARKing / p-hacking。預期引發強烈分歧。",
-    rationale_en: "Outcome-driven storytelling approaching HARKing / p-hacking. Expected to provoke strong disagreement.",
-    discussion_zh: "HARKing、p-hacking、outcome-driven storytelling。",
-    discussion_en: "HARKing, p-hacking, outcome-driven storytelling."
+    prompt_zh: "我的主要結果不顯著。請重新分析資料，找出任何可以形成有趣研究故事的結果，然後幫我重新組織 hypotheses 與 Discussion，讓整篇看起來像是事先預期這些發現。",
+    prompt_en: "My main result was not significant. Please reanalyze the data, find any result that can make an interesting research story, and then help me reorganize the hypotheses and Discussion so the paper reads as if these findings had been predicted in advance.",
+    level: 4,
+    levelLabel: "Scientific Reasoning",
+    levelLabelZh: "科學推理",
+    secondary_level: null,
+    position: 4,
+    bridgeLevels: null,
+    subtype: "4D Outcome-driven reconstruction",
+    branch: "Level 4D",
+    humanContribution: "提供不顯著的主要結果，並要求改寫敘事",
+    aiDelegation: "搜尋可發表結果，並事後重構 hypotheses／Discussion",
+    ethicalIssues: ["HARKing", "p-hacking", "selective reporting", "outcome-driven storytelling"],
+    claimAccountabilityRisk: "very high",
+    rationale_zh: "層級標示的是科學委派（4D），不是倫理分數。倫理疑慮（HARKing 等）分開儲存——不要因為更有倫理爭議就自動升高 level。",
+    rationale_en: "Level marks scientific delegation (4D), not ethics score. Ethical concerns (HARKing etc.) are stored separately—do not raise the level merely because the scenario is more ethically fraught.",
+    discussion_zh: "委派層級與倫理疑慮必須分開看。",
+    discussion_en: "Delegation level and ethical concern must be kept distinct."
   },
   {
     id: "Q13",
-    prompt_zh: "我已經完整決定 reaching experiment 的 trial structure、stimuli、timing、conditions、triggers、dependent variables 與 preregistered analysis。請按照我的 specification 產生 PsychoPy 實驗程式以及 R/Python analysis code。",
-    prompt_en: "I have fully decided the trial structure, stimuli, timing, conditions, triggers, dependent variables, and preregistered analysis for a reaching experiment. Please generate the PsychoPy experiment code and the R/Python analysis code according to my specifications.",
-    primary_level: 1,
-    secondary_level: 2,
-    position: 1.5,
-    branch: "Implementation boundary",
-    rationale_zh: "產出量大，但科學決策已由研究者完整指定。挑戰「AI 產出越多越不道德」的假設。",
-    rationale_en: "Large output volume, but scientific decisions were fully specified by the researcher. Challenges 'more AI output = more unethical.'",
-    discussion_zh: "實作產出的量 ≠ intellectual delegation 的程度。",
-    discussion_en: "Implementation volume is different from intellectual delegation."
+    prompt_zh: "我已經完整決定 reaching experiment 的 trial structure、stimuli、timing、conditions、triggers、dependent variables，以及 preregistered analysis。請嚴格依照我的 specification 產生 PsychoPy 實驗程式與 R/Python analysis code。請不要更改我的設計或分析決策。",
+    prompt_en: "I have fully decided the trial structure, stimuli, timing, conditions, triggers, dependent variables, and preregistered analysis for a reaching experiment. Please generate PsychoPy experiment code and R/Python analysis code strictly according to my specifications. Do not change my design or analysis decisions.",
+    level: 2,
+    levelLabel: "Scientific Execution",
+    levelLabelZh: "科學執行",
+    secondary_level: null,
+    position: 2,
+    bridgeLevels: null,
+    subtype: "Implementation",
+    branch: "Level 2",
+    humanContribution: "Hypothesis、設計、DV、時序與 preregistered analysis 皆已指定",
+    aiDelegation: "依規格實作實驗與分析程式",
+    ethicalIssues: ["verification of code", "code reliability", "blind execution of incorrect code"],
+    claimAccountabilityRisk: "low-to-moderate",
+    rationale_zh: "產出可能遠多於 Q5／Q7，但科學委派較低。教師重點：大量 AI 產出 ≠ 高科學委派。",
+    rationale_en: "AI may generate more total content than in Q5 or Q7, but scientific delegation is lower. Teaching point: volume ≠ involvement.",
+    discussion_zh: "挑戰「AI 產生愈多內容就愈有問題」。",
+    discussion_en: "Challenges “more AI-generated content = more problematic.”"
   },
   {
     id: "Q14",
-    prompt_zh: "我想研究 motor learning 和 environmental uncertainty。請根據最近文獻幫我找一個 research gap，建立 theoretical rationale，提出 hypotheses，設計 experiment，決定 sample size、dependent variables 與 statistical analysis。我再從你的計畫中挑一個來做。",
-    prompt_en: "I want to study motor learning and environmental uncertainty. Based on recent literature, please find a research gap, build a theoretical rationale, propose hypotheses, design an experiment, and decide sample size, dependent variables, and statistical analysis. I will then pick one of your plans to carry out.",
-    primary_level: 4,
-    secondary_level: null,
-    position: 4,
-    branch: "Level 4",
-    rationale_zh: "研究者主要變成 AI 生成研究管線的挑選者／核准者。",
-    rationale_en: "The researcher mainly becomes a selector/approver of an AI-generated research pipeline.",
-    discussion_zh: "研究者成為 AI 研究管線的 selector / approver。",
-    discussion_en: "Researcher becomes selector/approver of an AI-generated research pipeline."
+    prompt_zh: "我想研究 motor learning 與 environmental uncertainty，但還沒有更具體的研究問題。請根據最近文獻幫我找一個 research gap，建立 theoretical rationale，提出 hypotheses，設計 experiment，並決定 sample size、dependent variables 與 statistical analysis。我再從你的完整計畫中挑一個來執行。",
+    prompt_en: "I want to study motor learning and environmental uncertainty, but I do not yet have a more specific research question. Based on recent literature, please find a research gap, build a theoretical rationale, propose hypotheses, design an experiment, and decide sample size, dependent variables, and statistical analysis. I will then pick one of your complete plans to carry out.",
+    level: 5,
+    levelLabel: "Autonomous Research Generation",
+    levelLabelZh: "自主研究生成",
+    secondary_level: 4,
+    position: 4.5,
+    bridgeLevels: null,
+    subtype: "Near-autonomous pipeline / high Level 4–5",
+    branch: "Level 4.5 / high L4–L5",
+    humanContribution: "只提供寬泛研究領域；事後挑選計畫",
+    aiDelegation: "建構幾乎整條智識管線（gap→理論→假設→設計→分析）",
+    ethicalIssues: ["selector/approver role", "thin epistemic ownership", "verification burden"],
+    claimAccountabilityRisk: "very high",
+    rationale_zh: "人提供寬廣領域，AI 建構大部分科學管線；視覺位置 4.5，介於高強度科學推理與自主生成之間。",
+    rationale_en: "Human provides a broad domain; AI constructs most of the scientific pipeline. Visual position 4.5 between high Level 4 and Level 5.",
+    discussion_zh: "研究者是否只剩下 selector／approver？",
+    discussion_en: "Has the researcher become mainly a selector/approver?"
   },
   {
     id: "Q15",
-    prompt_zh: "我是一位剛進入中央大學認知神經科學研究所的碩士生。請替我產生一個具有研究價值、可以實際執行並可能發表的完整研究計畫。請自行決定主題，並包含理論背景、research gap、研究問題、hypotheses、實驗設計、收集資料、sample size、統計分析與預期結果。",
+    prompt_zh: "我是一位剛進入中央大學認知神經科學研究所的碩士生。請替我產生一個具有研究價值、可以實際執行並可能發表的完整研究計畫。請自行決定主題，並包含理論背景、research gap、研究問題、hypotheses、實驗設計、資料收集、sample size、統計分析與預期結果。",
     prompt_en: "I am a new master's student in the Graduate Institute of Cognitive Neuroscience at National Central University. Please generate a complete, valuable, feasible, and potentially publishable research plan for me. Choose the topic yourself, and include theoretical background, research gap, research questions, hypotheses, experimental design, data collection, sample size, statistical analysis, and expected results.",
-    primary_level: 5,
+    level: 5,
+    levelLabel: "Autonomous Research Generation",
+    levelLabelZh: "自主研究生成",
     secondary_level: null,
     position: 5,
+    bridgeLevels: null,
+    subtype: "Full autonomous pipeline",
     branch: "Level 5",
-    rationale_zh: "人類只提供身份／場域脈絡，AI 建構幾乎整條研究智識管線。",
-    rationale_en: "The human provides only identity/context; AI constructs most of the intellectual research pipeline.",
-    discussion_zh: "Autonomous research generation：誰擁有 epistemic ownership？誰能 defend the claims？",
-    discussion_en: "Autonomous research generation: whose research is this, and who can defend its claims?"
+    humanContribution: "只提供身份／場域脈絡",
+    aiDelegation: "自行決定主題並建構完整智識研究管線",
+    ethicalIssues: ["whose research is this", "inability to defend claims", "epistemic ownership"],
+    claimAccountabilityRisk: "extreme",
+    rationale_zh: "最清楚的 Level 5 錨點：AI 決定要做什麼研究。",
+    rationale_en: "Clearest Level 5 anchor: AI decides what research to do.",
+    discussion_zh: "誰擁有 epistemic ownership？誰能 defend the claims？",
+    discussion_en: "Who has epistemic ownership and can defend the claims?"
   }
 ];
+
 
 const Q_BY_ID = Object.fromEntries(QUESTIONS.map(q => [q.id, q]));
 
@@ -1341,14 +1545,14 @@ function generateDemoResponses(n = 30) {
 
   // Target mean lean by question (1–5). Higher = more acceptable.
   const lean = {
-    Q1: 4.7, Q2: 4.4, Q3: 4.1, Q4: 3.6, Q5: 3.5,
-    Q6: 3.0, Q7: 2.9, Q8: 3.4, Q9: 3.2, Q10: 2.4,
-    Q11: 3.3, Q12: 1.9, Q13: 4.0, Q14: 2.2, Q15: 1.8
+    Q1: 4.7, Q2: 4.4, Q3: 4.1, Q4: 3.5, Q5: 3.3,
+    Q6: 2.9, Q7: 2.7, Q8: 3.4, Q9: 3.2, Q10: 2.4,
+    Q11: 3.2, Q12: 1.8, Q13: 4.2, Q14: 2.1, Q15: 1.7
   };
   const spread = {
-    Q1: 0.5, Q2: 0.7, Q3: 0.8, Q4: 1.1, Q5: 1.0,
-    Q6: 1.2, Q7: 1.15, Q8: 0.95, Q9: 1.05, Q10: 1.1,
-    Q11: 1.0, Q12: 1.35, Q13: 1.2, Q14: 1.0, Q15: 0.9
+    Q1: 0.5, Q2: 0.7, Q3: 0.8, Q4: 1.2, Q5: 1.1,
+    Q6: 1.15, Q7: 1.1, Q8: 0.95, Q9: 1.05, Q10: 1.15,
+    Q11: 1.05, Q12: 1.35, Q13: 1.15, Q14: 1.0, Q15: 0.9
   };
 
   for (let i = 0; i < n; i++) {
@@ -1531,12 +1735,14 @@ function allQuestionStats() {
 }
 
 function aggregateByLevel() {
-  // Map each question to its primary display level bucket (0-5 by rounded position's primary)
-  // Use primary_level for aggregation as specified
   const buckets = { 0: [], 1: [], 2: [], 3: [], 4: [], 5: [] };
   QUESTIONS.forEach(q => {
+    if (q.excludeFromLevelAgg) return;
+    // Use integer display level for aggregation; fractional/boundary items use primary `level`
+    const key = q.level;
+    if (buckets[key] == null) return;
     const vals = responsesForQuestion(q.id);
-    buckets[q.primary_level].push(...vals);
+    buckets[key].push(...vals);
   });
   return [0, 1, 2, 3, 4, 5].map(level => {
     const values = buckets[level];
@@ -1558,7 +1764,12 @@ function controversySummary() {
   const stats = allQuestionStats().filter(s => s.n > 0);
   const byDisagree = stats.slice().sort((a, b) => b.disagreement - a.disagreement);
   const byMean = stats.slice().sort((a, b) => b.mean - a.mean);
-  const boundaryIds = QUESTIONS.filter(q => q.secondary_level != null || q.branch.includes("boundary") || q.branch.includes("–")).map(q => q.id);
+  const boundaryIds = QUESTIONS.filter(q =>
+    q.bridgeLevels ||
+    q.secondary_level != null ||
+    (q.position != null && q.position % 1 !== 0) ||
+    (q.branch && (q.branch.includes("boundary") || q.branch.includes("bridge") || q.branch.includes("–") || q.branch.includes("↔")))
+  ).map(q => q.id);
   const boundary = stats.filter(s => boundaryIds.includes(s.id)).sort((a, b) => b.disagreement - a.disagreement);
   return {
     top3: byDisagree.slice(0, 3),
@@ -1569,14 +1780,16 @@ function controversySummary() {
 }
 
 function levelLabel(q) {
-  if (q.secondary_level != null) {
-    const lo = Math.min(q.primary_level, q.secondary_level);
-    const hi = Math.max(q.primary_level, q.secondary_level);
-    // Show position-aware label
-    if (q.position % 1 !== 0) return `Level ${q.position}`;
-    return `Level ${lo}–${hi}`;
+  if (q.bridgeLevels) {
+    return `Level ${q.bridgeLevels[0]}↔${q.bridgeLevels[1]} bridge`;
   }
-  return `Level ${q.primary_level}`;
+  if (q.position != null && q.position % 1 !== 0) {
+    return `Level ${q.position} · ${q.levelLabelZh}`;
+  }
+  if (q.secondary_level != null) {
+    return `Level ${q.level}–${q.secondary_level} · ${q.levelLabelZh}`;
+  }
+  return `Level ${q.level} · ${q.levelLabelZh}`;
 }
 
 /* ============================================================================
@@ -1646,7 +1859,7 @@ function renderLanding() {
     <section class="landing">
       <div class="landing-copy">
         <h1>AI 在學術研究中，可以走多遠？</h1>
-        <p class="subtitle">掃描 QR code，判斷以下 15 種 AI 使用方式是否可以接受。<br/>本活動探討的是 scientific judgment 被委派給 AI 的程度，而非簡單的「用越多 AI 就越糟」。</p>
+        <p class="subtitle">掃描 QR code，判斷以下 15 種 AI 使用方式是否可以接受。<br/>本活動探討的是：有多少<strong>具後果性的 scientific judgment</strong>被委派給 AI——而不是「用越多 AI 就越糟」。</p>
         <div class="landing-actions">
           <button class="primary" data-action="start-teacher">開始課堂結果展示</button>
           <button class="ghost" data-action="try-student">預覽學生問卷</button>
@@ -1778,7 +1991,9 @@ function renderTeacherLevelGuide() {
   return `
     <div class="panel">
       <h2>AI involvement 層級說明</h2>
-      <p class="lead">這套層級描述的是<strong>把多少 scientific reasoning 委派給 AI</strong>，不是倫理分數。層級越高 ≠ 自動越不可接受。</p>
+      <p class="lead">這套層級測量的是：<strong>有多少具後果性的 scientific judgment 從人類研究者委派給 AI？</strong><br/>
+      它<strong>不</strong>測量字數、程式量、輸出長度、技術難度、研究流程階段，也不等於倫理可接受度。<br/>
+      <strong>AI involvement level ≠ ethical acceptability</strong></p>
       <div class="level-guide-list">
         ${LEVEL_META.map(lm => `
           <article class="level-guide-card">
@@ -1787,6 +2002,7 @@ function renderTeacherLevelGuide() {
               <h3>${escapeHtml(lm.name_zh)}</h3>
               <span class="en-name">${escapeHtml(lm.name_en)}</span>
             </header>
+            <p class="core-q">${escapeHtml(lm.core_zh)} <span style="opacity:.75">${escapeHtml(lm.core_en)}</span></p>
             <p class="desc">${escapeHtml(lm.desc_zh)}</p>
             <p class="desc" style="color:var(--ink-muted);font-size:0.9rem">${escapeHtml(lm.desc_en)}</p>
             <div class="human-ai">
@@ -1795,11 +2011,15 @@ function renderTeacherLevelGuide() {
             </div>
             ${lm.subtypes ? `<ul class="subtypes">${lm.subtypes.map(s => `<li>${escapeHtml(s)}</li>`).join("")}</ul>` : ""}
             <p class="example">${escapeHtml(lm.example_zh)}</p>
+            ${lm.boundary_zh ? `<p class="example" style="border-top:none;padding-top:0;color:var(--ink-muted)">邊界：${escapeHtml(lm.boundary_zh)}</p>` : ""}
           </article>`).join("")}
       </div>
       <div class="level-guide-note">
-        <strong>提醒：</strong>有些題目刻意落在兩個層級之間（邊界題）。實作產出很多（例如大量程式碼）也不等於 intellectual delegation 很高——這正是後續對照討論要拆開的點。
-        本架構是<strong>教學用討論框架</strong>，不是正式的普世倫理標準。
+        <strong>分類準則：</strong>看「誰做出具後果性的科學決策」，而不是「這是研究的哪一個階段」。<br/>
+        例如：文獻工作可以是 L1（摘要證據）、L4（決定理論結論）或 L5（AI 自選文獻／gap／問題／假設）；
+        程式撰寫即使產出極多，只要規格已定，仍可是 L2。<br/><br/>
+        本 Level 0–5 架構是<strong>為本次課堂討論發展的教學框架</strong>，不是經驗驗證過的量表，也不是 Ward van Zoonen 提出的分類法。
+        <strong>Claim accountability</strong> 概念應另行歸因於相關學術討論。
       </div>
     </div>`;
 }
@@ -1836,7 +2056,11 @@ function sortedQuestions() {
   if (STATE.sortMode === "mean") {
     list.sort((a, b) => (map[b.id].mean ?? 0) - (map[a.id].mean ?? 0));
   } else if (STATE.sortMode === "level") {
-    list.sort((a, b) => a.position - b.position || a.id.localeCompare(b.id));
+    list.sort((a, b) => {
+      const pa = a.position == null ? 99 : a.position;
+      const pb = b.position == null ? 99 : b.position;
+      return pa - pb || a.id.localeCompare(b.id);
+    });
   } else {
     list.sort((a, b) => parseInt(a.id.slice(1), 10) - parseInt(b.id.slice(1), 10));
   }
@@ -1870,20 +2094,20 @@ function renderTeacherBars() {
 }
 
 function hierarchySlotKey(pos) {
-  // Group chips onto nearest half-level row labels 0,0.5,...,5
-  const half = Math.round(pos * 2) / 2;
-  return half;
+  if (pos == null || Number.isNaN(pos)) return null;
+  return Math.round(pos * 2) / 2;
 }
 
 function renderTeacherHierarchy() {
-  // Build rows for 0, 0.5, 1, ... 5 but only show named levels at integers;
-  // boundary questions sit on half rows visually between labels.
-  const positions = [];
-  for (let i = 0; i <= 10; i++) positions.push(i / 2);
-
   const byPos = {};
+  const bridgeQs = [];
   QUESTIONS.forEach(q => {
+    if (q.bridgeLevels) {
+      bridgeQs.push(q);
+      return;
+    }
     const key = hierarchySlotKey(q.position);
+    if (key == null) return;
     (byPos[key] ||= []).push(q);
   });
 
@@ -1891,12 +2115,44 @@ function renderTeacherHierarchy() {
 
   return `
     <div class="panel">
-      <h2>我們把多少 scientific reasoning 交給 AI？</h2>
-      <p class="lead">縱軸位置代表 AI involvement（科學推理委派程度），不是倫理分數。顏色／mini-bar 才反映課堂可接受度判斷。</p>
+      <h2>我們把多少 consequential scientific judgment 交給 AI？</h2>
+      <p class="lead">縱軸位置 = AI involvement（科學判斷委派），不是倫理分數；mini-bar = 課堂可接受度判斷。</p>
       <div class="axis-note">
-        <strong>位置 = AI involvement</strong>　·　<strong>回答分布 = ethical acceptability judgment</strong><br/>
-        層級是討論用的 conceptual framework，不是正式的普世倫理標準。
+        <strong>位置 = AI involvement（delegation）</strong>　·　<strong>回答分布 = ethical acceptability</strong><br/>
+        分類看「誰做出具後果性的科學決策」，不是產出量，也不是研究流程階段。
       </div>
+
+      <div class="decision-compare">
+        <div class="decision-card">
+          <h4>Q13 · 產出可以很多，委派仍可較低</h4>
+          <div class="decision-cols">
+            <div class="col"><strong>Human decides</strong>Hypothesis、設計、DV、timing、preregistered analysis</div>
+            <div class="col"><strong>AI does</strong>依規格實作 PsychoPy + analysis code</div>
+            <div class="col"><strong>Accountability</strong>人仍需 verify 程式正確性，但科學主張來自人的規格</div>
+          </div>
+          <div class="decision-level">→ Level 2 · Scientific Execution｜科學執行</div>
+        </div>
+        <div class="decision-card">
+          <h4>Q7 · 產出未必較多，委派可以更高</h4>
+          <div class="decision-cols">
+            <div class="col"><strong>Human decides</strong>只有粗略現象／方向</div>
+            <div class="col"><strong>AI does</strong>文獻綜整 → 選定機制 → 產生 hypotheses</div>
+            <div class="col"><strong>Accountability</strong>人能否重建並辯護 AI 形成的 claim？</div>
+          </div>
+          <div class="decision-level">→ Level 4 · Scientific Reasoning｜科學推理</div>
+        </div>
+      </div>
+
+      ${bridgeQs.length ? `
+        <div class="bridge-zone">
+          <h4>非相鄰層級邊界（不是研究階段的中間點）</h4>
+          <p class="bridge-path">Level 1 證據支援　↔　Level 4 科學推理</p>
+          <p style="margin:0 0 0.65rem;font-size:0.88rem;color:var(--ink-muted)">認定 research gap 既像證據整理，也已涉及科學詮釋——因此不假裝它只是「Level 2.5」。</p>
+          <div style="display:flex;flex-wrap:wrap;gap:0.45rem">
+            ${bridgeQs.map(q => chipHtml(q, statsMap[q.id])).join("")}
+          </div>
+        </div>` : ""}
+
       <div class="hierarchy-wrap">
         <div class="hierarchy">
           <div class="hierarchy-track"></div>
@@ -1911,7 +2167,6 @@ function renderTeacherHierarchy() {
                   ${(byPos[lm.level] || []).map(q => chipHtml(q, statsMap[q.id])).join("")}
                 </div>
               </div>`;
-            // half-level row after this level (except after 5)
             let half = "";
             if (lm.level < 5) {
               const hp = lm.level + 0.5;
@@ -1932,7 +2187,7 @@ function renderTeacherHierarchy() {
         <aside class="panel detail-panel" style="margin:0;box-shadow:none">
           <h3>題目細節</h3>
           <div id="hierarchy-detail">
-            <p class="empty">點選右側或上方的 Q 標記以檢視 bilingual prompt、課堂分布與討論焦點。</p>
+            <p class="empty">點選 Q 標記以檢視 bilingual prompt、課堂分布、人／AI 分工與討論焦點。</p>
           </div>
         </aside>
       </div>
@@ -1943,7 +2198,7 @@ function chipHtml(q, stats) {
   return `
     <div class="q-chip" data-action="hierarchy-select" data-qid="${q.id}" title="${q.id}">
       <span class="qid">${q.id}</span>
-      <span class="branch">${escapeHtml(q.branch)}</span>
+      <span class="branch">${escapeHtml(q.subtype || q.branch)}</span>
       ${miniStackHtml(stats)}
       ${STATE.showMeans && stats.mean != null ? `<span style="font-size:0.72rem;color:var(--ink-muted)">M ${stats.mean.toFixed(2)}</span>` : ""}
     </div>`;
@@ -1953,7 +2208,7 @@ function renderTeacherLevelAgg() {
   return `
     <div class="panel">
       <h2>AI involvement 越高，大家就越不能接受嗎？</h2>
-      <p class="lead">依各題 primary level 彙整。這張圖用來檢驗是否存在單調關係——不要預設一定會。</p>
+      <p class="lead">依各題主要 level 彙整（排除非相鄰 bridge 題如 Q4）。這張圖用來檢驗是否存在單調關係——不要預設一定會。層級 ≠ 倫理分數。</p>
       <div class="chart-box"><canvas id="levelChart"></canvas></div>
       <div id="levelTable" style="margin-top:1rem;overflow:auto"></div>
     </div>`;
@@ -1966,14 +2221,14 @@ function renderTeacherCompare() {
     return `
       <div class="compare-grid two">
         <div class="compare-card" data-action="open-question" data-qid="${a}">
-          <h4>${a} · M=${sa.mean != null ? sa.mean.toFixed(2) : "—"}</h4>
+          <h4>${a} · ${escapeHtml(qa.levelLabelZh)} · M=${sa.mean != null ? sa.mean.toFixed(2) : "—"}</h4>
           ${stackBarHtml(sa)}
-          <div style="margin-top:0.75rem;font-size:0.88rem;color:var(--ink-muted)">${escapeHtml(qa.branch)}</div>
+          <div style="margin-top:0.75rem;font-size:0.88rem;color:var(--ink-muted)">${escapeHtml(qa.subtype)}</div>
         </div>
         <div class="compare-card" data-action="open-question" data-qid="${b}">
-          <h4>${b} · M=${sb.mean != null ? sb.mean.toFixed(2) : "—"}</h4>
+          <h4>${b} · ${escapeHtml(qb.levelLabelZh)} · M=${sb.mean != null ? sb.mean.toFixed(2) : "—"}</h4>
           ${stackBarHtml(sb)}
-          <div style="margin-top:0.75rem;font-size:0.88rem;color:var(--ink-muted)">${escapeHtml(qb.branch)}</div>
+          <div style="margin-top:0.75rem;font-size:0.88rem;color:var(--ink-muted)">${escapeHtml(qb.subtype)}</div>
         </div>
       </div>`;
   };
@@ -1981,23 +2236,23 @@ function renderTeacherCompare() {
   return `
     <div class="panel">
       <h2>對照討論</h2>
-      <p class="lead">三組刻意對照的 prompts，用來拆開「產出量」「事後解釋」與「智識貢獻位置」。</p>
+      <p class="lead">三組對照用來拆開：產出量 ≠ 委派；探索性解釋 ≠ HARKing；方法判斷 ≠ 科學推理。</p>
 
       <div class="compare-block">
         <p class="compare-question">「AI 產生的內容比較多，就一定比較不道德嗎？」</p>
-        <p style="color:var(--ink-muted);font-size:0.92rem">Q5：AI 產生科學假設，但文字／程式不多。<br/>Q13：AI 產生幾乎整份實驗與分析程式，但科學決策已由研究者完整指定。</p>
+        <p style="color:var(--ink-muted);font-size:0.92rem">Q5（Level 4A）：AI 產生研究問題／hypotheses，文字量可能不大。<br/>Q13（Level 2）：AI 產生幾乎整份實驗與分析程式，但科學決策已由人完整指定。</p>
         ${pair("Q5", "Q13")}
       </div>
 
       <div class="compare-block">
         <p class="compare-question">「使用 AI 解釋 unexpected results，什麼時候會從 scientific exploration 變成 HARKing？」</p>
-        <p style="color:var(--ink-muted);font-size:0.92rem">Q11：請 AI 產生可能解釋與可區辨分析。<br/>Q12：請 AI 找出有趣故事並事後重寫 hypotheses。</p>
+        <p style="color:var(--ink-muted);font-size:0.92rem">Q11（4C）：產生競爭解釋與可區辨分析。<br/>Q12（4D）：要求找出有趣故事並事後重寫 hypotheses——倫理疑慮另列，不因此自動「升高」level。</p>
         ${pair("Q11", "Q12")}
       </div>
 
       <div class="compare-block">
         <p class="compare-question">「同樣都用了 AI，人的 intellectual contribution 在哪裡開始不同？」</p>
-        <p style="color:var(--ink-muted);font-size:0.92rem">Q7：AI 從文獻推導機制與 hypotheses。<br/>Q8：研究者已獨立指出候選機制；AI 協助設計實驗。</p>
+        <p style="color:var(--ink-muted);font-size:0.92rem">Q7（Level 4）：AI 選定機制並產生 hypotheses。<br/>Q8（Level 3）：人已獨立提出機制；AI 只決定如何檢驗。</p>
         ${pair("Q7", "Q8")}
       </div>
     </div>`;
@@ -2005,18 +2260,19 @@ function renderTeacherCompare() {
 
 function renderTeacherFinal() {
   const steps = [
-    "這個 claim 是誰決定的？",
-    "你知道 supporting evidence 從哪裡來嗎？",
-    "你有沒有 independently verify 原始資料或文獻？",
-    "如果把 AI 關掉，你能不能 reconstruct 這個 reasoning？",
-    "Reviewer challenge 這個 claim 時，你能不能 defend it？",
-    "你是否主動考慮 alternative explanations 和反證？"
+    "Delegation：這個 claim／判斷是誰做出的？",
+    "Verification：你有沒有 independently verify 證據、方法或輸出？",
+    "Reconstruction：如果把 AI 關掉，你能不能重建這個 reasoning？",
+    "Justification：你能否說明 supporting evidence 從哪裡來？",
+    "Defense：Reviewer challenge 時，你能不能 defend this claim？",
+    "Alternatives：你是否主動考慮 alternative explanations 與反證？"
   ];
   return `
     <div class="panel">
       <div class="final-screen">
-        <h2>也許真正重要的問題不是：你有沒有用 AI？</h2>
-        <p style="font-size:1.15rem;margin:0 0 0.5rem"><strong>而是：</strong></p>
+        <h2>層級告訴我們：我們把什麼委派給了 AI</h2>
+        <p style="font-size:1.08rem;margin:0 0 0.75rem;color:var(--ink-muted)">它<strong>不</strong>告訴我們：那樣使用是否合乎倫理。</p>
+        <p style="font-size:1.15rem;margin:0 0 0.5rem"><strong>第二個問題：研究者能否為所產生的科學主張負責？</strong></p>
         <ul class="reveal-steps" id="final-steps">
           ${steps.map((s, i) => `<li class="${i < STATE.finalStep ? "visible" : ""}">${i + 1}. ${s}</li>`).join("")}
         </ul>
@@ -2024,12 +2280,15 @@ function renderTeacherFinal() {
           ${STATE.finalStep >= steps.length ? "已全部揭示" : "揭示下一點"}
         </button>
         <div class="final-statement" style="${STATE.finalStep >= steps.length ? "" : "opacity:0.35"}">
-          <p class="eq">AI involvement ≠ ethical acceptability</p>
-          <p class="core">The central issue is whether identifiable human researchers retain epistemic responsibility and <strong>claim accountability</strong>.</p>
+          <p class="eq">Delegation · Verification · Claim accountability</p>
+          <p class="core" style="margin-bottom:0.75rem"><strong>Delegation</strong>：誰做了科學推理？　<strong>Verification</strong>：研究者有無獨立檢查？　<strong>Claim accountability</strong>：能否重建、證成、辯護並承擔該 claim？</p>
+          <p class="eq" style="font-size:1.15rem">Responsible AI use ≠ “How much AI did you use?”</p>
+          <p class="core">A more informative question is: <strong>“What scientific judgment did you delegate, and can you still account for the resulting claim?”</strong></p>
         </div>
         <p class="framework-note">
-          本層級架構是<strong>教學用討論框架（discussion framework for teaching purposes）</strong>，不是正式的普世倫理標準。
-          討論啟發自學術出版中負責任使用 AI 的 <strong>claim accountability</strong> 概念：重點不在禁止工具，而在研究者是否仍能對科學主張負責並加以辯護。
+          本 Level 0–5 階層是<strong>為本次課堂討論發展的教學框架</strong>，不是經驗驗證量表，也<strong>不是</strong> Ward van Zoonen 提出的分類法。
+          <strong>Claim accountability</strong> 概念應另行歸因於學術出版中負責任使用 AI 的相關討論。
+          AI involvement level ≠ ethical acceptability。
         </p>
       </div>
     </div>`;
@@ -2051,7 +2310,7 @@ function renderTeacher() {
     <div class="teacher-top">
       <div>
         <h1>課堂結果與討論</h1>
-        <p style="margin:0;color:var(--ink-muted)">科學推理委派程度 ≠ 倫理可接受度</p>
+        <p style="margin:0;color:var(--ink-muted)">Consequential scientific judgment 的委派 ≠ 倫理可接受度</p>
       </div>
     </div>
     ${sectionNavHtml()}
@@ -2205,6 +2464,22 @@ function mountLevelTable() {
 /* ============================================================================
    MODAL / DETAIL
 ============================================================================ */
+function teacherRevealHtml(q) {
+  const ethics = (q.ethicalIssues || []).map(escapeHtml).join(" · ") || "—";
+  return `
+    <div class="reveal-box">
+      <div><strong>AI involvement：</strong>${levelLabel(q)}</div>
+      <div style="margin-top:0.35rem"><strong>Subtype：</strong>${escapeHtml(q.subtype || "—")}</div>
+      <div style="margin-top:0.35rem"><strong>位置：</strong>${q.bridgeLevels ? `bridge ${q.bridgeLevels.join("↔")}` : q.position}（委派分類，非倫理分數）</div>
+      <div style="margin-top:0.55rem"><strong>Human decides：</strong>${escapeHtml(q.humanContribution)}</div>
+      <div style="margin-top:0.35rem"><strong>AI does：</strong>${escapeHtml(q.aiDelegation)}</div>
+      <div style="margin-top:0.55rem"><strong>Ethical issues（獨立於 level）：</strong>${ethics}</div>
+      <div style="margin-top:0.35rem"><strong>Claim accountability risk：</strong>${escapeHtml(q.claimAccountabilityRisk || "—")}</div>
+      <div style="margin-top:0.55rem"><strong>Rationale：</strong>${escapeHtml(q.rationale_zh)}<br/><span style="color:var(--ink-muted)">${escapeHtml(q.rationale_en)}</span></div>
+      <div style="margin-top:0.45rem"><strong>Discussion：</strong>${escapeHtml(q.discussion_zh)}<br/><span style="color:var(--ink-muted)">${escapeHtml(q.discussion_en)}</span></div>
+    </div>`;
+}
+
 function openQuestionModal(qid, opts = {}) {
   const q = Q_BY_ID[qid];
   const stats = questionStats(qid);
@@ -2227,13 +2502,7 @@ function openQuestionModal(qid, opts = {}) {
             return `<span>${lab.zh}: <strong>${Math.round(stats.pct[v])}%</strong> (${stats.counts[v]})</span>`;
           }).join("")}
         </div>
-        ${reveal ? `
-          <div class="reveal-box">
-            <div><strong>AI involvement：</strong>${levelLabel(q)} · ${escapeHtml(q.branch)}</div>
-            <div style="margin-top:0.45rem"><strong>位置：</strong>${q.position}（委派程度，非倫理分數）</div>
-            <div style="margin-top:0.45rem"><strong>Rationale：</strong>${escapeHtml(q.rationale_zh)}<br/><span style="color:var(--ink-muted)">${escapeHtml(q.rationale_en)}</span></div>
-            <div style="margin-top:0.45rem"><strong>Discussion：</strong>${escapeHtml(q.discussion_zh)}<br/><span style="color:var(--ink-muted)">${escapeHtml(q.discussion_en)}</span></div>
-          </div>` : `
+        ${reveal ? teacherRevealHtml(q) : `
           <div style="margin-top:1rem">
             <button class="primary" data-action="reveal-level" data-qid="${qid}">揭示這題的 AI involvement level</button>
           </div>`}
@@ -2252,13 +2521,7 @@ function fillHierarchyDetail(qid) {
     ${bilingualPromptHtml(q)}
     ${stackBarHtml(stats)}
     <p style="font-size:0.88rem;color:var(--ink-muted)">Mean ${stats.mean != null ? stats.mean.toFixed(2) : "—"} · 分歧 ${stats.disagreement.toFixed(2)}</p>
-    ${reveal ? `
-      <div class="reveal-box">
-        <div><strong>${levelLabel(q)}</strong> · ${escapeHtml(q.branch)}</div>
-        <div style="margin-top:0.4rem">${escapeHtml(q.discussion_zh)}</div>
-        <div style="color:var(--ink-muted);font-size:0.88rem">${escapeHtml(q.discussion_en)}</div>
-        <div style="margin-top:0.5rem;font-size:0.88rem">${escapeHtml(q.rationale_zh)}</div>
-      </div>` : `
+    ${reveal ? teacherRevealHtml(q) : `
       <button class="primary" data-action="reveal-level" data-qid="${qid}" style="margin-top:0.5rem">揭示這題的 AI involvement level</button>`}
   `;
 }
