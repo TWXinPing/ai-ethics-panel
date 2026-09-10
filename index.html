@@ -162,6 +162,68 @@ button:disabled {
   font-size: 0.92rem;
   text-align: center;
 }
+.personal-level-list {
+  display: grid;
+  gap: 0.85rem;
+  margin-top: 0.75rem;
+}
+.personal-level-row {
+  display: grid;
+  grid-template-columns: 140px 1fr;
+  gap: 0.85rem;
+  align-items: start;
+  padding: 0.75rem 0.85rem;
+  background: var(--bg-elevated);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+.personal-level-meta .lv {
+  font-weight: 700;
+  font-size: 1.05rem;
+}
+.personal-level-meta .name {
+  font-size: 0.84rem;
+  line-height: 1.35;
+  margin-top: 0.15rem;
+}
+.personal-level-meta .name span {
+  color: var(--ink-muted);
+  font-size: 0.78rem;
+}
+.personal-level-meta .stats {
+  margin-top: 0.35rem;
+  font-size: 0.8rem;
+  color: var(--ink-muted);
+}
+.personal-level-body .stack {
+  height: 28px;
+  border-radius: 8px;
+  overflow: hidden;
+}
+.personal-empty {
+  font-size: 0.88rem;
+  color: var(--ink-muted);
+  padding: 0.35rem 0;
+}
+.personal-qchips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.55rem;
+}
+.personal-qchip {
+  font-size: 0.78rem;
+  padding: 0.2rem 0.45rem;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--ink);
+  border: 1px solid #c5d9cf;
+}
+@media (max-width: 640px) {
+  .personal-level-row {
+    grid-template-columns: 1fr;
+  }
+}
 
 /* Landing */
 .landing {
@@ -2448,19 +2510,76 @@ function renderStudentQuestion() {
     </div>`;
 }
 
+function personalLevelProfile() {
+  return LEVEL_META.map(lm => {
+    const qs = QUESTIONS.filter(q => q.level === lm.level);
+    const items = qs.map(q => ({
+      id: q.id,
+      value: STATE.answers[q.id]
+    })).filter(x => x.value != null);
+    const values = items.map(x => x.value);
+    const mean = values.length
+      ? values.reduce((a, b) => a + b, 0) / values.length
+      : null;
+    return {
+      level: lm.level,
+      name_zh: lm.name_zh,
+      name_en: lm.name_en,
+      items,
+      values,
+      mean,
+      dist: countDistribution(values),
+      n: values.length
+    };
+  });
+}
+
 function renderSubmitted() {
+  const profile = personalLevelProfile();
+  const answered = profile.reduce((s, p) => s + p.n, 0);
+  const overallMean = (() => {
+    const vals = profile.flatMap(p => p.values);
+    return vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : null;
+  })();
+
   return `
-    <div class="panel" style="max-width:860px;margin:0 auto">
-      <h2 style="font-family:var(--font-serif)">你剛剛其實回答的是其中一個問題</h2>
-      <p style="color:var(--ink-muted);margin-top:0">You have just answered only one part of the problem.</p>
-      <p>你的匿名<strong>倫理可接受度</strong>判斷已送出。接下來會引入另外三個不能互相取代的問題：</p>
-      <div class="four-grid">
-        <div class="four-box"><h4>1. Ethics / Research Integrity</h4><p>Is this practice normatively acceptable?<br/>這種做法在規範上可以接受嗎？</p></div>
-        <div class="four-box"><h4>2. AI Delegation</h4><p>What scientific work or judgment was delegated to AI?<br/>什麼科學工作／判斷被委派給 AI？</p></div>
-        <div class="four-box"><h4>3. Epistemic Risk</h4><p>What might be lost or distorted in knowledge production?<br/>知識生產中可能失去或扭曲什麼？</p></div>
-        <div class="four-box"><h4>4. Governance Response</h4><p>What should the researcher retain, verify, document, or justify?<br/>研究者應保留、核對、紀錄或證成什麼？</p></div>
+    <div class="panel" style="max-width:920px;margin:0 auto">
+      <h2 style="font-family:var(--font-serif)">你的個人 AI involvement 分配</h2>
+      <p style="color:var(--ink-muted);margin-top:0">Your personal distribution across AI involvement levels</p>
+      <p>你剛送出的是<strong>倫理可接受度</strong>判斷。下圖依每題所屬的 AI involvement level，整理<strong>你個人</strong>的作答分布（不是全組結果）。</p>
+      <p style="font-size:0.92rem;color:var(--ink-muted);margin:0.35rem 0 1rem">
+        共 ${answered} 題 · 整體平均可接受度 ${overallMean != null ? overallMean.toFixed(2) : "—"}
+        （5 = 明確可以接受 · 1 = 明確不能接受）
+      </p>
+      ${legendHtml()}
+      <div class="personal-level-list">
+        ${profile.map(p => `
+          <div class="personal-level-row">
+            <div class="personal-level-meta">
+              <div class="lv">L${p.level}</div>
+              <div class="name">${escapeHtml(p.name_zh)}<br/><span>${escapeHtml(p.name_en)}</span></div>
+              <div class="stats">${p.n} 題${p.mean != null ? ` · M ${p.mean.toFixed(2)}` : ""}</div>
+            </div>
+            <div class="personal-level-body">
+              ${p.n ? stackBarHtml(p.dist, true) : `<div class="personal-empty">此層無題目／未作答</div>`}
+              ${p.n ? `<div class="personal-qchips">${p.items.map(it => {
+                const lab = RESPONSE_LABELS.find(r => r.value === it.value);
+                return `<span class="personal-qchip" title="${lab ? lab.zh : ""}"><strong>${it.id}</strong> ${it.value}</span>`;
+              }).join("")}</div>` : ""}
+            </div>
+          </div>
+        `).join("")}
       </div>
-      <p style="font-size:1.05rem"><strong>這四個問題彼此相關，但不能互相取代。</strong><br/><span style="color:var(--ink-muted)">These are related questions, but they are not the same question.</span></p>
+
+      <h3 style="margin:1.6rem 0 0.5rem;font-family:var(--font-serif)">接著討論時，別只停在「可不可以接受」</h3>
+      <p style="margin-top:0;color:var(--ink-muted)">You answered one question. Three more cannot replace it.</p>
+      <div class="four-grid">
+        <div class="four-box"><h4>1. Ethics</h4><p>規範上可以接受嗎？<br/><span style="color:var(--ink-muted)">你剛答的</span></p></div>
+        <div class="four-box"><h4>2. AI Delegation</h4><p>委派了什麼科學判斷？</p></div>
+        <div class="four-box"><h4>3. Epistemic Risk</h4><p>可能失去或扭曲什麼？</p></div>
+        <div class="four-box"><h4>4. Governance</h4><p>應保留、核對、辯護什麼？</p></div>
+      </div>
+      <p style="font-size:1.02rem"><strong>這四個問題彼此相關，但不能互相取代。</strong></p>
       <div style="display:flex;gap:0.6rem;flex-wrap:wrap;margin-top:1rem">
         <button class="primary" data-action="start-teacher">查看結果與討論</button>
         <button data-action="go-landing">回到首頁</button>
