@@ -1104,14 +1104,76 @@ const RESPONSE_LABELS = [
   { value: 1, zh: "明確不能接受", en: "Clearly unacceptable", color: "var(--r5)" }
 ];
 
-const GOVERNANCE_LAYERS = [
-  { id: "verification", zh: "Verification｜核對驗證", en: "Verification", note_zh: "核對解釋、技術定義與關鍵主張", note_en: "Check explanations, technical definitions, and key claims" },
-  { id: "traceability", zh: "Source Traceability｜來源可追溯", en: "Source Traceability", note_zh: "回到原始文獻，保留檢索／引用軌跡", note_en: "Return to primary sources; keep retrieval/citation trails" },
-  { id: "validation", zh: "Validation & Reproducibility｜驗證與可重現", en: "Validation & Reproducibility", note_zh: "檢查程式、測試輸出、保留可重現腳本", note_en: "Inspect code, test outputs, preserve reproducible scripts" },
-  { id: "method_justification", zh: "Methodological Justification｜方法證成", en: "Methodological Justification", note_zh: "人能獨立說明為何此方法回答此問題", note_en: "Humans can independently justify why the method answers the question" },
-  { id: "claim_accountability", zh: "Claim Accountability｜主張可問責", en: "Claim Accountability", note_zh: "重建推論、尋找反證、辯護 claim", note_en: "Reconstruct reasoning, seek counterevidence, defend the claim" },
-  { id: "strong_oversight", zh: "Strong Oversight & Reconstruction｜強化督導與獨立重建", en: "Strong Oversight & Independent Reconstruction", note_zh: "保留 provenance、展示實質人類智識貢獻", note_en: "Maintain provenance and demonstrate substantial human intellectual contribution" }
-];
+const GOVERNANCE_FRAMEWORK = {
+  source: "van Zoonen, W., Morgan-Thomas, A., & Tursunbayeva, A. (2026). Beyond AI disclosure: Claim accountability and responsible research in scholarly publishing. European Management Journal.",
+  doi: "https://doi.org/10.1016/j.emj.2026.06.001",
+  coreQuestion_zh: "具名人類能否重建並辯護進入學術紀錄的每一個 claim？",
+  coreQuestion_en: "Can the claim be reconstructed and defended by a named human?",
+  shift: [
+    { from_zh: "治理單位：工具／流程", from_en: "Unit: tool / process", to_zh: "治理單位：claim", to_en: "Unit: the claim" },
+    { from_zh: "合規／揭露", from_en: "Compliance / disclosure", to_zh: "可辯護性／可問責", to_en: "Defensibility / accountability" },
+    { from_zh: "AI 有沒有被用、有沒有申報", from_en: "Was AI used / declared?", to_zh: "人能否為推理與證據負責", to_en: "Can a human account for reasoning and evidence?" }
+  ],
+  inadequate: [
+    { zh: "Prohibition｜禁止", en: "Restricts the tool; does not secure claim accountability", note_zh: "禁止工具≠保證 claim 可辯護" },
+    { zh: "Disclosure｜揭露", en: "Records use; silent on evidence and judgment", note_zh: "揭露使用≠證成主張；也可能誘發策略性沉默" },
+    { zh: "Validity-only｜只看表面上有效", en: "Plausibility ≠ justification", note_zh: "流暢文本可能來自未讀文獻／未核對資料" }
+  ],
+  thresholds: [
+    {
+      id: "confidentiality",
+      zh: "Confidentiality threshold｜保密門檻",
+      en: "Confidentiality threshold",
+      logic_zh: "硬門檻（binary）：受託材料要嘛仍在信任邊界內，要嘛已外洩——一旦外洩無法部分修復。",
+      logic_en: "Hard/binary: entrusted material is either protected or exposed; exposure cannot be partially undone.",
+      protects_zh: "保護 peer review／編輯審議中的受託材料（稿件、審查意見、編輯往來）。",
+      protects_en: "Protects entrusted material in peer review and editorial deliberation.",
+      test_zh: "是否有任何受託內容進入無法保證保護的外部系統？",
+      test_en: "Has any entrusted content entered an external system that cannot guarantee protection?"
+    },
+    {
+      id: "judgment",
+      zh: "Judgment threshold｜判斷門檻",
+      en: "Judgment threshold",
+      logic_zh: "分級門檻（graded）：允許 AI 協助，但不能取代人應提供的 substantive judgment。",
+      logic_en: "Graded: AI may assist, but must not supply the substantive judgment the human is expected to provide.",
+      protects_zh: "保護學術 claim 背後的人類推理責任（assistance ≠ substitution）。",
+      protects_en: "Protects human responsibility for the reasoning behind scholarly claims.",
+      test_zh: "若拿掉 AI 輸出，我能否從自己的閱讀重建推理並辯護每一個 claim／引用／推論步驟？",
+      test_en: "If AI output were unavailable, could I reconstruct and defend every claim, citation, and inferential step from my own reading?"
+    }
+  ],
+  roles: [
+    {
+      role: "Author",
+      role_zh: "作者",
+      confidentiality_zh: "稿件（含草稿／補充）是否進入可能留存或再利用內容的系統？",
+      judgment_zh: "對每個解釋性 claim、引用、引文與推論步驟：若 AI 輸出不可用，我能否從自己的閱讀重建並辯護？",
+      action_zh: "陳述可辯護性，而非只做申報；保留可應對未來挑戰的工作筆記與核對軌跡。"
+    },
+    {
+      role: "Reviewer",
+      role_zh: "審查人",
+      confidentiality_zh: "稿件、我的草稿推理或審查往來是否進入（外部）AI 系統？—此門檻對審查人是絕對的。",
+      judgment_zh: "若 AI 產生的文字消失，我是否仍願意為報告中每一個評價點負責？理由是否來自我獨立閱讀？",
+      action_zh: "寧可拒審也不突破保密門檻；僅使用出版方安全基礎設施。"
+    },
+    {
+      role: "Editor",
+      role_zh: "編輯",
+      confidentiality_zh: "所有稿件相關材料是否始終留在期刊安全編輯系統內？",
+      judgment_zh: "我能否完全用人的語言陳述決策理由（我的閱讀、審查意見、適合度判斷），而非轉述機器理由？",
+      action_zh: "在系統中紀錄決策理由；把 AI 建議當 input，永不當 grounds。"
+    },
+    {
+      role: "Publisher",
+      role_zh: "出版方／機構",
+      confidentiality_zh: "我們提供的基礎設施是否讓審查／編輯不必求助外部工具？",
+      judgment_zh: "誘因結構是獎勵可辯護性（仔細閱讀、核對引用、有理據的異議），還是獎勵速度與產量？",
+      action_zh: "投資保密基礎設施；建立出版後審查／稽核；獎勵 defensibility 所需的詮釋勞動。"
+    }
+  ]
+};
 
 
 /** Epistemic downsides of LLM use in academic work (Tang, 2025, Publications 13(4), 63).
@@ -2355,7 +2417,7 @@ function sectionNavHtml() {
     "AI involvement 分布",
     "認識成本",
     "風險矩陣",
-    "治理層層",
+    "治理層",
     "對照討論",
     "綜合收束"
   ];
@@ -2506,24 +2568,78 @@ function renderRiskMatrix() {
 }
 
 function renderGovernanceLayers() {
+  const g = GOVERNANCE_FRAMEWORK;
   return `
     <div class="panel">
-      <h2>Governance should become richer as the delegated judgment becomes more consequential</h2>
-      <h3 style="margin:0 0 0.75rem">當委派給 AI 的科學判斷越關鍵，治理方式也需要更完整</h3>
-      <p class="lead">後續層級<strong>不取代</strong>前面的防護，而是<strong>累積疊加</strong>。例如 Level 4 仍需要 verification 與 source traceability，再加上 claim accountability。</p>
-      <div class="gov-stack">
-        ${GOVERNANCE_LAYERS.map((g, i) => `
-          <div class="gov-layer">
-            <div class="cum">Layer ${i + 1} · cumulative</div>
-            <strong>${escapeHtml(g.zh)}</strong>
-            <div style="font-size:0.88rem;color:var(--ink-muted);margin-top:0.25rem">${escapeHtml(g.note_zh)}<br/>${escapeHtml(g.note_en)}</div>
-          </div>
-          ${i < GOVERNANCE_LAYERS.length - 1 ? '<div style="text-align:center;color:var(--ink-muted)">↓</div>' : ""}
-        `).join("")}
+      <h2>Governance｜治理層</h2>
+      <h3 style="margin:0 0 0.35rem">Claim accountability，而非 tool disclosure</h3>
+      <p class="lead">
+        治理單位是 <strong>claim</strong>，不是工具。<br/>
+        <strong>${escapeHtml(g.coreQuestion_zh)}</strong><br/>
+        <span style="color:var(--ink-muted)">${escapeHtml(g.coreQuestion_en)}</span><br/>
+        <a href="${escapeHtml(g.doi)}" target="_blank" rel="noopener">van Zoonen, Morgan-Thomas &amp; Tursunbayeva (2026), European Management Journal</a>
+      </p>
+
+      <h3 style="margin:1.1rem 0 0.5rem">從程序治理 → claim 治理</h3>
+      <div class="four-grid">
+        ${g.shift.map(s => `
+          <div class="four-box">
+            <h4 style="font-weight:500;color:var(--ink-muted);text-decoration:line-through">${escapeHtml(s.from_zh)}</h4>
+            <p><strong>→ ${escapeHtml(s.to_zh)}</strong><br/><span style="opacity:.85">${escapeHtml(s.to_en)}</span></p>
+          </div>`).join("")}
       </div>
-      <div class="level-guide-note" style="margin-top:1rem">
-        Level 4 可能需要：Verification + Source traceability + methodological understanding + claim accountability。<br/>
-        Level 5 可能需要以上全部，再加上 stronger oversight 與 independent reconstruction。禁止不是自動後果。
+
+      <h3 style="margin:1.1rem 0 0.5rem">既有三種回應為何不夠</h3>
+      <div class="four-grid">
+        ${g.inadequate.map(x => `
+          <div class="four-box">
+            <h4>${escapeHtml(x.zh)}</h4>
+            <p>${escapeHtml(x.note_zh)}<br/><span style="opacity:.85">${escapeHtml(x.en)}</span></p>
+          </div>`).join("")}
+      </div>
+
+      <h3 style="margin:1.25rem 0 0.5rem">Two-threshold framework｜雙門檻</h3>
+      <div class="decision-compare">
+        ${g.thresholds.map(t => `
+          <div class="decision-card">
+            <h4>${escapeHtml(t.zh)}</h4>
+            <div class="decision-cols">
+              <div class="col"><strong>Logic</strong>${escapeHtml(t.logic_zh)}<br/><span style="opacity:.85">${escapeHtml(t.logic_en)}</span></div>
+              <div class="col"><strong>Protects</strong>${escapeHtml(t.protects_zh)}</div>
+              <div class="col"><strong>Test</strong>${escapeHtml(t.test_zh)}<br/><span style="opacity:.85">${escapeHtml(t.test_en)}</span></div>
+            </div>
+          </div>`).join("")}
+      </div>
+      <p class="lead">Confidentiality = 硬約束；Judgment = 軟問責（允許協助，禁止取代）。兩者都需要：只靠禁止／權限表，或只靠揭露／反思，都不足。</p>
+
+      <h3 style="margin:1.25rem 0 0.5rem">Role-based self-assessment｜依角色自評</h3>
+      <p class="lead">在「行動當下」自問，而不是只在事後勾揭露表。Lab meeting 可先聚焦 <strong>Author</strong> 列。</p>
+      <div style="overflow:auto">
+        <table class="summary-table">
+          <thead>
+            <tr>
+              <th>Role</th>
+              <th>Confidentiality threshold</th>
+              <th>Judgment threshold</th>
+              <th>Obligation</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${g.roles.map(r => `
+              <tr>
+                <td><strong>${escapeHtml(r.role)}</strong><br/><span style="color:var(--ink-muted)">${escapeHtml(r.role_zh)}</span></td>
+                <td>${escapeHtml(r.confidentiality_zh)}</td>
+                <td>${escapeHtml(r.judgment_zh)}</td>
+                <td>${escapeHtml(r.action_zh)}</td>
+              </tr>`).join("")}
+          </tbody>
+        </table>
+      </div>
+
+      <div class="axis-note" style="margin-top:1rem">
+        <strong>Institutional anchors｜制度錨點</strong>（否則自評會淪為 boilerplate）<br/>
+        安全基礎設施、可信的審查機制、獎勵 defensibility 而非 throughput。<br/>
+        對本研究室討論：重點是 judgment threshold——AI 可以協助，但不能讓你無法辯護自己名下的 claim。
       </div>
     </div>`;
 }
