@@ -1163,7 +1163,8 @@ const CONFIG = {
   // Live group responses (anon / publishable key only — never service_role)
   SUPABASE_URL: "https://hkxvlzfwjlxtmtmnkkji.supabase.co",
   SUPABASE_ANON_KEY: "sb_publishable_sh-Eej8i_YUD_i5PHgHxag_BClaX9Aj",
-  SESSION_ID: "lab-meeting-default",
+  SESSION_ID: "lab-meeting-20260910",
+  SESSION_STORAGE_KEY: "ai_ethics_active_session_v1",
   STORAGE_KEY: "ai_ethics_survey_v5",
   TABLE_NAME: "ai_ethics_response"
 };
@@ -1934,7 +1935,8 @@ const STATE = {
   livePollTimer: null,
   liveLastRefresh: null,
   liveError: null,
-  liveParticipantCount: 0
+  liveParticipantCount: 0,
+  sessionId: null
 };
 
 function uid() {
@@ -1956,10 +1958,46 @@ function isSupabaseConfigured() {
     !CONFIG.SUPABASE_ANON_KEY.includes("YOUR_"));
 }
 
-function studentEntryUrl() {
-  if (CONFIG.STUDENT_URL && CONFIG.STUDENT_URL.trim()) return CONFIG.STUDENT_URL.trim();
+function getSessionId() {
+  return STATE.sessionId || CONFIG.SESSION_ID;
+}
+
+function setSessionId(id) {
+  STATE.sessionId = id;
+  try {
+    localStorage.setItem(CONFIG.SESSION_STORAGE_KEY, id);
+  } catch (_) { /* ignore */ }
+}
+
+function initSessionId() {
+  const params = new URLSearchParams(window.location.search);
+  const fromUrl = (params.get("session") || "").trim();
+  if (fromUrl) {
+    setSessionId(fromUrl);
+    return;
+  }
+  try {
+    const stored = localStorage.getItem(CONFIG.SESSION_STORAGE_KEY);
+    if (stored && stored.trim()) {
+      STATE.sessionId = stored.trim();
+      return;
+    }
+  } catch (_) { /* ignore */ }
+  STATE.sessionId = CONFIG.SESSION_ID;
+}
+
+function syncSessionInUrl() {
   const u = new URL(window.location.href);
+  u.searchParams.set("session", getSessionId());
+  history.replaceState({}, "", u.toString());
+}
+
+function studentEntryUrl() {
+  const u = (CONFIG.STUDENT_URL && CONFIG.STUDENT_URL.trim())
+    ? new URL(CONFIG.STUDENT_URL.trim())
+    : new URL(window.location.href);
   u.searchParams.set("mode", "student");
+  u.searchParams.set("session", getSessionId());
   return u.toString();
 }
 
@@ -2065,7 +2103,7 @@ function generateDemoResponses(n = 30) {
       let v = Math.round(mu + z * sd);
       v = Math.min(5, Math.max(1, v));
       responses.push({
-        session_id: CONFIG.SESSION_ID,
+        session_id: getSessionId(),
         anonymous_participant_id: pid,
         question_id: q.id,
         response_value: v,
@@ -2102,7 +2140,7 @@ function updateLiveMeta(rows) {
 
 async function fetchLiveResponses() {
   const rows = await supabaseRequest(
-    `${CONFIG.TABLE_NAME}?session_id=eq.${encodeURIComponent(CONFIG.SESSION_ID)}&select=*`,
+    `${CONFIG.TABLE_NAME}?session_id=eq.${encodeURIComponent(getSessionId())}&select=*`,
     { method: "GET", prefer: "return=representation" }
   );
   updateLiveMeta(rows);
@@ -2197,48 +2235,55 @@ function clearDemoData() {
 
 async function deleteLiveSessionResponses() {
   await supabaseRequest(
-    `${CONFIG.TABLE_NAME}?session_id=eq.${encodeURIComponent(CONFIG.SESSION_ID)}`,
+    `${CONFIG.TABLE_NAME}?session_id=eq.${encodeURIComponent(getSessionId())}`,
     { method: "DELETE", prefer: "return=minimal" }
   );
 }
 
+function rotateSessionId() {
+  const stamp = new Date().toISOString().slice(0, 10).replace(/-/g, "");
+  const next = `lab-${stamp}-${Math.random().toString(36).slice(2, 7)}`;
+  setSessionId(next);
+  syncSessionInUrl();
+  return next;
+}
+
 async function resetResults() {
+  const current = getSessionId();
+  const ok = confirm(
+    STATE.supabaseReady
+      ? `確定要重設結果並開新場次嗎？\n\n目前場次：${current}\n\n說明：雲端可能無法直接刪除舊資料，因此會切換到新的 session；重新整理後舊資料不會再出現。\n請讓參與者重新整理／重掃 QR（新連結會帶新 session）。`
+      : "確定要清除目前所有結果資料嗎？"
+  );
+  if (!ok) return;
+
+  stopLivePolling();
+
   if (STATE.supabaseReady) {
-    const ok = confirm(
-      `確定要重設本場結果嗎？\n\n這會刪除雲端 session「${CONFIG.SESSION_ID}」的所有回答，並清空畫面。\n此操作無法復原。`
-    );
-    if (!ok) return;
-    stopLivePolling();
     try {
       await deleteLiveSessionResponses();
-      STATE.responses = [];
-      STATE.isDemoData = false;
-      STATE.dataMode = "live";
-      STATE.liveParticipantCount = 0;
-      STATE.liveError = null;
-      persistLocalResponses();
-      render();
-      startLivePolling();
     } catch (err) {
-      console.warn("Cloud reset failed:", err);
-      alert("無法刪除雲端資料：" + (err.message || err) + "\n已暫停自動更新；畫面已先清空。");
-      STATE.responses = [];
-      STATE.isDemoData = false;
-      STATE.dataMode = "live";
-      STATE.liveParticipantCount = 0;
-      persistLocalResponses();
-      render();
+      console.warn("Cloud delete skipped/failed (will rotate session):", err);
     }
+    const next = rotateSessionId();
+    STATE.responses = [];
+    STATE.isDemoData = false;
+    STATE.dataMode = "live";
+    STATE.liveParticipantCount = 0;
+    STATE.liveError = null;
+    persistLocalResponses();
+    render();
+    startLivePolling();
+    alert(`已開新場次：${next}\n請更新／重掃學生 QR，或請大家重新整理問卷頁。`);
     return;
   }
 
-  if (!confirm("確定要清除目前所有結果資料嗎？")) return;
   clearDemoData();
 }
 
 async function submitParticipantAnswers() {
   const records = STATE.order.map(qid => ({
-    session_id: CONFIG.SESSION_ID,
+    session_id: getSessionId(),
     // Append question id so each row is unique even if the DB column is marked Unique
     anonymous_participant_id: `${STATE.participantId}__${qid}`,
     question_id: qid,
@@ -2628,14 +2673,14 @@ function instructorPanelHtml() {
     <div class="instructor-panel ${STATE.instructorOpen ? "open" : ""} ${STATE.presentation ? "" : "force-show"}" id="instructor-panel">
       <header data-action="toggle-instructor">
         <span>主持／結果面板 ${STATE.instructorOpen ? "▾" : "▸"}</span>
-        <span style="font-weight:500;color:var(--ink-muted);font-size:0.82rem">${STATE.dataMode === "live" ? "Live / Supabase" : STATE.isDemoData ? "Demo" : "Local"}${STATE.supabaseReady ? "" : " · 未接雲端"}</span>
+        <span style="font-weight:500;color:var(--ink-muted);font-size:0.82rem">${STATE.dataMode === "live" ? "Live / Supabase" : STATE.isDemoData ? "Demo" : "Local"}${STATE.supabaseReady ? "" : " · 未接雲端"} · ${escapeHtml(getSessionId())}</span>
       </header>
       <div class="instructor-body">
         <div class="control-grid">
           <button class="primary" data-action="refresh-live" ${STATE.supabaseReady ? "" : "disabled"}>重新整理即時資料</button>
           <button data-action="load-demo">載入示範資料</button>
           <button data-action="clear-demo">清除示範資料</button>
-          <button data-action="reset-results">Reset results（清空本場雲端）</button>
+          <button data-action="reset-results">Reset results（開新場次）</button>
           <button data-action="toggle-mode">切換問卷／結果模式</button>
           <button data-action="reveal-all-levels">Reveal all levels</button>
           <button data-action="hide-all-levels">Hide all levels</button>
@@ -3656,6 +3701,7 @@ window.addEventListener("resize", () => {
    BOOT
 ============================================================================ */
 (async function boot() {
+  initSessionId();
   await initData();
   const params = new URLSearchParams(window.location.search);
   const mode = params.get("mode");
