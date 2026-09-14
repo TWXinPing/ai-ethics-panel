@@ -6,7 +6,7 @@ create table if not exists ai_ethics_responses (
   session_id text not null,
   anonymous_participant_id text not null,
   question_id text not null,
-  response_value smallint not null check (response_value between 1 and 5),
+  response_value smallint not null check (response_value between 1 and 6),
   timestamp timestamptz default now(),
   academic_stage text,
   ai_use_frequency text

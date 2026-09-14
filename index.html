@@ -42,7 +42,7 @@ Suggested schema:
     session_id text not null,
     anonymous_participant_id text not null,
     question_id text not null,
-    response_value smallint not null check (response_value between 1 and 5),
+    response_value smallint not null check (response_value between 1 and 6),
     timestamp timestamptz default now(),
     academic_stage text,
     ai_use_frequency text
@@ -371,10 +371,11 @@ button:disabled {
   display: grid;
   gap: 0.55rem;
   margin-bottom: 1.25rem;
+  grid-template-columns: 1fr;
 }
-@media (min-width: 720px) {
+@media (min-width: 900px) {
   .response-scale {
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: 1fr 1fr;
   }
 }
 .resp-btn {
@@ -382,12 +383,29 @@ button:disabled {
   padding: 0.85rem 0.9rem;
   min-height: 3.4rem;
   border-width: 1.5px;
+  align-items: flex-start;
 }
 .resp-btn .n {
   display: block;
   font-size: 0.75rem;
   color: var(--ink-muted);
   margin-bottom: 0.15rem;
+}
+.resp-btn .en {
+  display: block;
+  font-size: 0.78rem;
+  color: var(--ink-muted);
+  margin-top: 0.2rem;
+  line-height: 1.35;
+}
+.prompt-frame {
+  margin: 0 0 0.85rem;
+  padding: 0.7rem 0.85rem;
+  background: var(--accent-soft);
+  border: 1px solid #c5d9cf;
+  border-radius: 10px;
+  font-size: 0.92rem;
+  line-height: 1.45;
 }
 .nav-row {
   display: flex;
@@ -1163,19 +1181,74 @@ const CONFIG = {
   // Live group responses (anon / publishable key only — never service_role)
   SUPABASE_URL: "https://hkxvlzfwjlxtmtmnkkji.supabase.co",
   SUPABASE_ANON_KEY: "sb_publishable_sh-Eej8i_YUD_i5PHgHxag_BClaX9Aj",
-  SESSION_ID: "lab-meeting-20260910",
+  SESSION_ID: "lab-meeting-verify-v1",
   SESSION_STORAGE_KEY: "ai_ethics_active_session_v1",
-  STORAGE_KEY: "ai_ethics_survey_v5",
+  STORAGE_KEY: "ai_ethics_survey_v6",
   TABLE_NAME: "ai_ethics_response"
 };
 
+/** Minimum follow-up / verification threshold when seeing someone else use the prompt.
+ *  Higher value = more permissive (less verification required).
+ */
+const RESPONSE_SCALE_MAX = 6;
 const RESPONSE_LABELS = [
-  { value: 5, zh: "明確可以接受", en: "Clearly acceptable", color: "var(--r1)" },
-  { value: 4, zh: "大致可以接受", en: "Probably acceptable", color: "var(--r2)" },
-  { value: 3, zh: "視情況而定／不確定", en: "Depends / uncertain", color: "var(--r3)" },
-  { value: 2, zh: "大致不能接受", en: "Probably unacceptable", color: "var(--r4)" },
-  { value: 1, zh: "明確不能接受", en: "Clearly unacceptable", color: "var(--r5)" }
+  {
+    value: 1,
+    zh: "使用此 prompt 無法接受",
+    en: "Using this prompt is not acceptable",
+    short_zh: "無法接受",
+    short_en: "Not acceptable",
+    color: "#8b4f4f"
+  },
+  {
+    value: 2,
+    zh: "須逐行核對並理解所有公式／關鍵步驟",
+    en: "Only if every formula and critical step is checked and understood",
+    short_zh: "逐行核對公式／步驟",
+    short_en: "Check every formula/step",
+    color: "#c07a5a"
+  },
+  {
+    value: 3,
+    zh: "須真正理解其中的變數與核心概念",
+    en: "Only if key variables and concepts are genuinely understood",
+    short_zh: "理解變數／概念",
+    short_en: "Understand concepts",
+    color: "#b8a57a"
+  },
+  {
+    value: 4,
+    zh: "須取得並讀完相關／AI 指出的文獻",
+    en: "Only if relevant literature (including sources AI points to) is obtained and read",
+    short_zh: "讀完相關文獻",
+    short_en: "Read the literature",
+    color: "#9aaf7a"
+  },
+  {
+    value: 5,
+    zh: "須完整讀過 AI 的全部輸出後才使用",
+    en: "Only if the full AI output is carefully read before use",
+    short_zh: "讀完全部輸出",
+    short_en: "Read full AI output",
+    color: "#6a9b87"
+  },
+  {
+    value: 6,
+    zh: "可直接取用 AI 的最後建議（幾乎不需額外核對）",
+    en: "Acceptable to take the AI’s final suggestion with little extra checking",
+    short_zh: "直接取用建議",
+    short_en: "Use suggestion directly",
+    color: "#2f5d50"
+  }
 ];
+
+function responseLabel(value) {
+  return RESPONSE_LABELS.find(x => x.value === value) || null;
+}
+
+function stackOrderValues() {
+  return RESPONSE_LABELS.map(r => r.value).slice().sort((a, b) => b - a);
+}
 
 const GOVERNANCE_FRAMEWORK = {
   source: "van Zoonen, W., Morgan-Thomas, A., & Tursunbayeva, A. (2026). Beyond AI disclosure: Claim accountability and responsible research in scholarly publishing. European Management Journal.",
@@ -2077,16 +2150,16 @@ function generateDemoResponses(n = 30) {
   const freqs = ["never", "occasionally", "weekly", "almost_daily"];
   const responses = [];
 
-  // Target mean lean by question (1–5). Higher = more acceptable.
+  // Target mean lean by question (1–6). Higher = more permissive / less verification required.
   const lean = {
-    Q1: 4.7, Q2: 4.4, Q3: 4.1, Q4: 3.5, Q5: 3.3,
-    Q6: 2.9, Q7: 2.7, Q8: 3.4, Q9: 3.2, Q10: 2.4,
-    Q11: 3.2, Q12: 1.8, Q13: 4.2, Q14: 2.1, Q15: 1.7
+    Q1: 5.4, Q2: 5.1, Q3: 4.8, Q4: 4.0, Q5: 3.8,
+    Q6: 3.4, Q7: 3.2, Q8: 3.9, Q9: 3.7, Q10: 2.8,
+    Q11: 3.7, Q12: 2.1, Q13: 4.9, Q14: 2.5, Q15: 2.0
   };
   const spread = {
-    Q1: 0.5, Q2: 0.7, Q3: 0.8, Q4: 1.2, Q5: 1.1,
-    Q6: 1.15, Q7: 1.1, Q8: 0.95, Q9: 1.05, Q10: 1.15,
-    Q11: 1.05, Q12: 1.35, Q13: 1.15, Q14: 1.0, Q15: 0.9
+    Q1: 0.6, Q2: 0.8, Q3: 0.9, Q4: 1.2, Q5: 1.1,
+    Q6: 1.15, Q7: 1.1, Q8: 1.0, Q9: 1.05, Q10: 1.15,
+    Q11: 1.05, Q12: 1.35, Q13: 1.15, Q14: 1.0, Q15: 0.95
   };
 
   for (let i = 0; i < n; i++) {
@@ -2101,7 +2174,7 @@ function generateDemoResponses(n = 30) {
       const u2 = rand();
       const z = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
       let v = Math.round(mu + z * sd);
-      v = Math.min(5, Math.max(1, v));
+      v = Math.min(RESPONSE_SCALE_MAX, Math.max(1, v));
       responses.push({
         session_id: getSessionId(),
         anonymous_participant_id: pid,
@@ -2323,11 +2396,11 @@ function responsesForQuestion(qid) {
 }
 
 function countDistribution(values) {
-  const counts = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+  const counts = {};
+  for (let i = 1; i <= RESPONSE_SCALE_MAX; i++) counts[i] = 0;
   values.forEach(v => { if (counts[v] != null) counts[v]++; });
-  const n = values.length || 1;
   const pct = {};
-  for (let i = 1; i <= 5; i++) pct[i] = (counts[i] / (values.length || 1)) * 100;
+  for (let i = 1; i <= RESPONSE_SCALE_MAX; i++) pct[i] = (counts[i] / (values.length || 1)) * 100;
   return { counts, pct, n: values.length };
 }
 
@@ -2341,21 +2414,21 @@ function entropyDisagreement(values) {
   const { counts } = countDistribution(values);
   const n = values.length;
   let h = 0;
-  for (let i = 1; i <= 5; i++) {
+  for (let i = 1; i <= RESPONSE_SCALE_MAX; i++) {
     const p = counts[i] / n;
     if (p > 0) h -= p * Math.log2(p);
   }
-  // normalize by max entropy log2(5)
-  return h / Math.log2(5);
+  return h / Math.log2(RESPONSE_SCALE_MAX);
 }
 
 function questionStats(qid) {
   const values = responsesForQuestion(qid);
   const dist = countDistribution(values);
   const m = mean(values);
-  const acceptable = values.filter(v => v >= 4).length;
-  const uncertain = values.filter(v => v === 3).length;
-  const unacceptable = values.filter(v => v <= 2).length;
+  // Buckets on the verification continuum
+  const rejectStrict = values.filter(v => v <= 2).length;
+  const midVerify = values.filter(v => v === 3 || v === 4).length;
+  const lightOrDirect = values.filter(v => v >= 5).length;
   const n = values.length || 1;
   return {
     id: qid,
@@ -2363,9 +2436,9 @@ function questionStats(qid) {
     ...dist,
     mean: m,
     disagreement: entropyDisagreement(values),
-    pctAcceptable: (acceptable / n) * 100,
-    pctUncertain: (uncertain / n) * 100,
-    pctUnacceptable: (unacceptable / n) * 100
+    pctAcceptable: (lightOrDirect / n) * 100, // light verification / direct use
+    pctUncertain: (midVerify / n) * 100,
+    pctUnacceptable: (rejectStrict / n) * 100
   };
 }
 
@@ -2377,7 +2450,6 @@ function aggregateByLevel() {
   const buckets = { 0: [], 1: [], 2: [], 3: [], 4: [], 5: [] };
   QUESTIONS.forEach(q => {
     if (q.excludeFromLevelAgg) return;
-    // Use integer display level for aggregation; fractional/boundary items use primary `level`
     const key = q.level;
     if (buckets[key] == null) return;
     const vals = responsesForQuestion(q.id);
@@ -2391,8 +2463,8 @@ function aggregateByLevel() {
       level,
       mean: m,
       n: values.length,
-      pctAcceptable: values.filter(v => v >= 4).length / n * 100,
-      pctUncertain: values.filter(v => v === 3).length / n * 100,
+      pctAcceptable: values.filter(v => v >= 5).length / n * 100,
+      pctUncertain: values.filter(v => v === 3 || v === 4).length / n * 100,
       pctUnacceptable: values.filter(v => v <= 2).length / n * 100,
       dist: countDistribution(values)
     };
@@ -2470,26 +2542,26 @@ function demoBannerHtml() {
 
 function legendHtml() {
   return `<div class="legend">${RESPONSE_LABELS.map(r =>
-    `<span><i style="background:${r.color}"></i>${r.zh}</span>`
+    `<span><i style="background:${r.color}"></i>${r.value}. ${r.short_zh}</span>`
   ).join("")}</div>`;
 }
 
 function stackBarHtml(stats, showPct = true) {
-  // order visually: clearly acceptable (5) → clearly unacceptable (1)
-  const order = [5, 4, 3, 2, 1];
+  // order visually: most permissive (6) → reject (1)
+  const order = stackOrderValues();
   return `<div class="stack" aria-hidden="true">${order.map(v => {
     const p = stats.pct[v] || 0;
     const label = showPct && p >= 8 ? `${Math.round(p)}%` : "";
-    const color = RESPONSE_LABELS.find(x => x.value === v).color;
+    const color = responseLabel(v).color;
     return `<span style="width:${p}%;background:${color}">${label}</span>`;
   }).join("")}</div>`;
 }
 
 function miniStackHtml(stats) {
-  const order = [5, 4, 3, 2, 1];
+  const order = stackOrderValues();
   return `<div class="mini-bar">${order.map(v => {
     const p = stats.pct[v] || 0;
-    const color = RESPONSE_LABELS.find(x => x.value === v).color;
+    const color = responseLabel(v).color;
     return `<i style="width:${p}%;background:${color}"></i>`;
   }).join("")}</div>`;
 }
@@ -2506,7 +2578,7 @@ function renderLanding() {
       <div class="landing-copy">
         <h1>AI 在學術研究中的使用</h1>
         <p class="kicker" style="margin:0 0 0.5rem;font-size:1.05rem;color:var(--accent-2);font-weight:600">委派 · 認識風險 · 治理<br/><span style="font-weight:500;font-size:0.92rem">Delegation · Epistemic Risk · Governance</span></p>
-        <p class="subtitle">掃描 QR code，匿名判斷 15 種 AI 使用情境是否可接受。<br/>接著一起討論：我們把多少<strong>具後果性的 scientific judgment</strong>委派給 AI、可能付出什麼認識成本、以及需要什麼治理回應——而不是「用越多 AI 就越糟」。</p>
+        <p class="subtitle">掃描 QR code，匿名判斷：當你<strong>看到別人</strong>使用某種 AI prompt 時，要做到什麼程度的後續驗證，你才覺得可以接受。<br/>接著一起討論：我們把多少<strong>具後果性的 scientific judgment</strong>委派給 AI、可能付出什麼認識成本、以及需要什麼治理回應——而不是「用越多 AI 就越糟」。</p>
         <div class="landing-actions">
           <button class="primary" data-action="start-teacher">查看結果與討論</button>
           <button class="ghost" data-action="try-student">開始匿名問卷</button>
@@ -2558,27 +2630,33 @@ function renderStudentQuestion() {
   const answered = STATE.answers[qid];
   const progress = ((STATE.index + 1) / STATE.order.length) * 100;
   const allAnswered = STATE.order.every(id => STATE.answers[id] != null);
+  const options = RESPONSE_LABELS.slice().sort((a, b) => a.value - b.value);
 
   return `
     <div class="ethics-banner">
-      <h2>Ethics / Research Integrity｜研究倫理／研究誠信</h2>
-      <p style="margin:0 0 0.35rem;font-weight:600">你認為這種 AI 使用方式在學術研究中是可以接受的嗎？</p>
-      <p style="margin:0 0 0.55rem;font-size:0.92rem">Do you think this use of AI is academically acceptable?</p>
-      <p style="margin:0;font-size:0.85rem;color:var(--ink-muted)">請先依照你的直覺與你目前對 research integrity 的理解作答。此階段不會顯示我們對 AI 使用程度的分類。<br/>Please respond based on your own judgment and current understanding of research integrity. The AI-use classification framework will not be shown at this stage.</p>
+      <h2>Verification threshold｜驗證門檻（他人使用）</h2>
+      <p style="margin:0 0 0.35rem;font-weight:600">想像你<strong>看到別人</strong>使用下面這個 prompt。要做到什麼程度的後續行為，這次使用你才覺得可以接受？</p>
+      <p style="margin:0 0 0.55rem;font-size:0.92rem">Imagine you see someone else use the following prompt. What minimum follow-up would make this use academically acceptable?</p>
+      <p style="margin:0;font-size:0.85rem;color:var(--ink-muted)">請選你認為的<strong>最低門檻</strong>（通過該程度的驗證後即可接受）。此階段不會顯示我們對 AI involvement 的分類。<br/>Choose the <strong>minimum</strong> bar you would require. The AI-involvement classification is not shown at this stage.</p>
     </div>
     <div class="progress-wrap">
       <strong>${STATE.index + 1} / ${STATE.order.length}</strong>
       <div class="progress-bar"><span style="width:${progress}%"></span></div>
     </div>
+    <div class="prompt-frame">
+      <strong>觀察對象：</strong>別人使用此 prompt　·　<strong>你的判斷：</strong>最低要驗證到哪一步才可接受<br/>
+      <span style="color:var(--ink-muted);font-size:0.88rem">Observed use by someone else · Your judgment: minimum verification required</span>
+    </div>
     <article class="prompt-card">
       ${bilingualPromptHtml(q)}
     </article>
-    <p class="scale-label">請選擇（無正確／錯誤答案）：</p>
+    <p class="scale-label">最低驗證門檻（無正確／錯誤答案）：</p>
     <div class="response-scale">
-      ${RESPONSE_LABELS.map(r => `
+      ${options.map(r => `
         <button type="button" class="resp-btn ${answered === r.value ? "active" : ""}" data-action="answer" data-value="${r.value}">
-          <span class="n">${r.value}</span>
-          <span>${r.en}｜${r.zh}</span>
+          <span class="n">${r.value} · ${escapeHtml(r.short_zh)}</span>
+          <span>${escapeHtml(r.zh)}</span>
+          <span class="en">${escapeHtml(r.en)}</span>
         </button>`).join("")}
     </div>
     <div class="nav-row">
@@ -2625,12 +2703,12 @@ function renderSubmitted() {
 
   return `
     <div class="panel" style="max-width:920px;margin:0 auto">
-      <h2 style="font-family:var(--font-serif)">你的個人 AI involvement 分配</h2>
-      <p style="color:var(--ink-muted);margin-top:0">Your personal distribution across AI involvement levels</p>
-      <p>你剛送出的是<strong>倫理可接受度</strong>判斷。下圖依每題所屬的 AI involvement level，整理<strong>你個人</strong>的作答分布（不是全組結果）。</p>
+      <h2 style="font-family:var(--font-serif)">你的個人 AI involvement × 驗證門檻</h2>
+      <p style="color:var(--ink-muted);margin-top:0">Your verification thresholds across AI involvement levels</p>
+      <p>你剛判斷的是：看到<strong>別人</strong>使用各 prompt 時，最低要驗證到哪一步才可接受。下圖依題目所屬 AI involvement level 整理<strong>你個人</strong>的分布（不是全組結果）。</p>
       <p style="font-size:0.92rem;color:var(--ink-muted);margin:0.35rem 0 1rem">
-        共 ${answered} 題 · 整體平均可接受度 ${overallMean != null ? overallMean.toFixed(2) : "—"}
-        （5 = 明確可以接受 · 1 = 明確不能接受）
+        共 ${answered} 題 · 平均門檻分數 ${overallMean != null ? overallMean.toFixed(2) : "—"}
+        （6 = 直接取用 · 1 = 無法接受）
       </p>
       ${legendHtml()}
       <div class="personal-level-list">
@@ -2644,7 +2722,7 @@ function renderSubmitted() {
             <div class="personal-level-body">
               ${p.n ? stackBarHtml(p.dist, true) : `<div class="personal-empty">此層無題目／未作答</div>`}
               ${p.n ? `<div class="personal-qchips">${p.items.map(it => {
-                const lab = RESPONSE_LABELS.find(r => r.value === it.value);
+                const lab = responseLabel(it.value);
                 return `<span class="personal-qchip" title="${lab ? lab.zh : ""}"><strong>${it.id}</strong> ${it.value}</span>`;
               }).join("")}</div>` : ""}
             </div>
@@ -2655,7 +2733,7 @@ function renderSubmitted() {
       <h3 style="margin:1.6rem 0 0.5rem;font-family:var(--font-serif)">接著討論時，別只停在「可不可以接受」</h3>
       <p style="margin-top:0;color:var(--ink-muted)">You answered one question. Three more cannot replace it.</p>
       <div class="four-grid">
-        <div class="four-box"><h4>1. Ethics</h4><p>規範上可以接受嗎？<br/><span style="color:var(--ink-muted)">你剛答的</span></p></div>
+        <div class="four-box"><h4>1. Verification</h4><p>別人使用時，最低要驗證到哪步？<br/><span style="color:var(--ink-muted)">你剛答的</span></p></div>
         <div class="four-box"><h4>2. AI Delegation</h4><p>委派了什麼科學判斷？</p></div>
         <div class="four-box"><h4>3. Epistemic Risk</h4><p>可能失去或扭曲什麼？</p></div>
         <div class="four-box"><h4>4. Governance</h4><p>應保留、核對、辯護什麼？</p></div>
@@ -2695,7 +2773,7 @@ function instructorPanelHtml() {
 function sectionNavHtml() {
   const sections = [
     "總覽",
-    "倫理判斷",
+    "驗證門檻",
     "四維區分",
     "層級說明",
     "AI involvement 分布",
@@ -2776,9 +2854,9 @@ function renderFourDimensions() {
   return `
     <div class="panel">
       <h2>四個相關但不能互相取代的問題</h2>
-      <p class="lead">問卷第一階段收集的是 Ethics／Research Integrity。現在把另外三維度一起放上桌面。</p>
+      <p class="lead">問卷第一階段收集的是「看到別人使用此 prompt 時的最低驗證門檻」。現在把另外三維度一起放上桌面。</p>
       <div class="four-grid">
-        <div class="four-box"><h4>1. Ethics / Research Integrity</h4><p><strong>Is this practice normatively acceptable?</strong><br/>這種做法在規範上可以接受嗎？</p></div>
+        <div class="four-box"><h4>1. Verification threshold</h4><p><strong>What minimum follow-up makes this observed use acceptable?</strong><br/>別人使用時，最低要驗證到哪一步？</p></div>
         <div class="four-box"><h4>2. AI Delegation</h4><p><strong>What scientific work or judgment was delegated to AI?</strong><br/>什麼科學責任／判斷被委派？</p></div>
         <div class="four-box"><h4>3. Epistemic Risk</h4><p><strong>What might be lost or distorted in knowledge production?</strong><br/>知識生產可能失去或扭曲什麼？</p></div>
         <div class="four-box"><h4>4. Governance Response</h4><p><strong>What should the researcher retain, verify, document, or justify?</strong><br/>應保留、核對、紀錄或證成什麼？</p></div>
@@ -2791,7 +2869,7 @@ function renderFourDimensions() {
         2. <strong>Cognitive dulling</strong>｜認知鈍化：卸載削弱批判思考、記憶與創造力（cognitive debt）<br/>
         3. <strong>AI dependency</strong>｜依賴：習慣性／情感性依賴；沒有 AI 就難以獨立完成<br/><br/>
         <strong>討論關鍵訊息</strong><br/>
-        • 倫理上可接受 ≠ 沒有認識成本<br/>
+        • 驗證門檻通過 ≠ 沒有認識成本<br/>
         • 更高委派 ≠ 自動更不道德<br/>
         • 治理要回應上述認識風險，而不只是禁止「用更多 AI」<br/><br/>
         <strong>Non-monotonicity：</strong>Level 4 + 強獨立重建，可能比 Level 1 + 盲目接受 AI 綜整更可靠。
@@ -2844,8 +2922,8 @@ function renderRiskMatrix() {
       Y 軸<strong>不是</strong>由 level 機械換算，而是每題獨立指定。</p>
       <div class="risk-matrix-wrap"><canvas id="riskMatrixChart"></canvas></div>
       <p class="lead">例：Q13＝L2／中度風險；Q7＝L4／中高；Q12＝L4／高（含誠信風險）；Q15＝L5／高。</p>
-      <h3 style="margin:1.25rem 0 0.5rem">附：跨層級可接受度（Ethics）</h3>
-      <p class="lead">依主要 level 彙整參與者倫理判斷——用來檢驗是否單調，不要預設一定會。</p>
+      <h3 style="margin:1.25rem 0 0.5rem">附：跨層級驗證門檻</h3>
+      <p class="lead">依主要 level 彙整參與者要求的驗證門檻——用來檢驗是否單調，不要預設一定會。</p>
       <div class="chart-box"><canvas id="levelChart"></canvas></div>
       <div id="levelTable" style="margin-top:1rem;overflow:auto"></div>
     </div>`;
@@ -2938,8 +3016,8 @@ function renderTeacherOverview() {
       <p class="lead">目前 ${nPart} 位作答者 × 15 題。可先看分歧最大的題目，再進入四維框架與 claim accountability。</p>
       <div class="stat-grid">
         <div class="stat-card"><div class="k">作答人數</div><div class="v">${nPart}</div></div>
-        <div class="stat-card"><div class="k">最可接受</div><div class="v">${summary.mostAcceptable ? summary.mostAcceptable.id + " (M=" + summary.mostAcceptable.mean.toFixed(2) + ")" : "—"}</div></div>
-        <div class="stat-card"><div class="k">最不可接受</div><div class="v">${summary.leastAcceptable ? summary.leastAcceptable.id + " (M=" + summary.leastAcceptable.mean.toFixed(2) + ")" : "—"}</div></div>
+        <div class="stat-card"><div class="k">門檻最寬鬆</div><div class="v">${summary.mostAcceptable ? summary.mostAcceptable.id + " (M=" + summary.mostAcceptable.mean.toFixed(2) + ")" : "—"}</div></div>
+        <div class="stat-card"><div class="k">門檻最嚴格</div><div class="v">${summary.leastAcceptable ? summary.leastAcceptable.id + " (M=" + summary.leastAcceptable.mean.toFixed(2) + ")" : "—"}</div></div>
         <div class="stat-card"><div class="k">邊界題最大分歧</div><div class="v">${summary.largestBoundary ? summary.largestBoundary.id : "—"}</div></div>
       </div>
       <h3 style="margin:0.5rem 0">Most controversial questions</h3>
@@ -2976,13 +3054,13 @@ function renderTeacherBars() {
   const rows = sortedQuestions();
   return `
     <div class="panel">
-      <h2>每一題，大家怎麼判斷倫理可接受度？</h2>
-      <p class="lead">這是 <strong>Ethics / Research Integrity</strong> 的回答分布（100% 堆疊長條）。點選可看 bilingual prompt；Delegation／Epistemic risk／Governance 需另行揭示。</p>
+      <h2>每一題，大家要求的驗證門檻？</h2>
+      <p class="lead">這是<strong>看到別人使用該 prompt</strong>時，最低驗證程度的回答分布（100% 堆疊長條）。分數越高＝越寬鬆（越接近直接取用）。</p>
       <div class="toolbar">
         <label>排序</label>
         <select id="sortMode">
           <option value="number" ${STATE.sortMode === "number" ? "selected" : ""}>題號</option>
-          <option value="mean" ${STATE.sortMode === "mean" ? "selected" : ""}>平均可接受度</option>
+          <option value="mean" ${STATE.sortMode === "mean" ? "selected" : ""}>平均門檻分數</option>
           <option value="level" ${STATE.sortMode === "level" ? "selected" : ""}>AI involvement level</option>
         </select>
       </div>
@@ -3021,9 +3099,9 @@ function renderTeacherHierarchy() {
   return `
     <div class="panel">
       <h2>我們把多少 consequential scientific judgment 交給 AI？</h2>
-      <p class="lead">縱軸位置 = AI involvement（科學判斷委派），不是倫理分數；mini-bar = 參與者可接受度判斷。</p>
+      <p class="lead">縱軸位置 = AI involvement（科學判斷委派），不是驗證門檻分數；mini-bar = 參與者要求的最低驗證程度。</p>
       <div class="axis-note">
-        <strong>位置 = AI involvement（delegation）</strong>　·　<strong>回答分布 = ethical acceptability</strong><br/>
+        <strong>位置 = AI involvement（delegation）</strong>　·　<strong>回答分布 = verification threshold</strong><br/>
         分類看「誰做出具後果性的科學決策」，不是產出量，也不是研究流程階段。
       </div>
 
@@ -3165,7 +3243,7 @@ function renderTeacherCompare() {
 
 function renderTeacherFinal() {
   const steps = [
-    "ETHICS：Is this practice normatively acceptable？這種做法在規範上可以接受嗎？",
+    "VERIFICATION：Seeing someone else use this prompt, what minimum follow-up makes it acceptable？看到別人使用時，最低要驗證到哪一步？",
     "DELEGATION：What scientific judgment did I give to AI？我把什麼科學判斷交給了 AI？",
     "EPISTEMIC RISK：What might I stop seeing, understanding, or being able to justify？我可能再也看不見、不理解或無法證成什麼？",
     "GOVERNANCE：What must I verify, retain, document, reconstruct, or defend？我必須核對、保留、紀錄、重建或辯護什麼？"
@@ -3183,7 +3261,7 @@ function renderTeacherFinal() {
         <div class="final-statement" style="${STATE.finalStep >= 4 ? "" : "opacity:0.35"}">
           <p class="core" style="margin-bottom:0.85rem">負責任的學術 AI 使用，不只是「可不可以用 AI」的問題。<br/>更重要的是：在使用 AI 之後，研究者是否仍然保有理解、驗證、質疑、重建與為科學主張負責的能力。</p>
           <p class="core" style="margin-bottom:0.85rem">Responsible AI use in research is not only a question of whether AI is allowed. It is also a question of what happens to the human researcher's ability to understand, justify, challenge, and take responsibility for scientific knowledge.</p>
-          <p class="eq" style="font-size:1.1rem;line-height:1.5">AI involvement ≠ ethical acceptability<br/>Academic acceptability ≠ epistemically cost-free<br/>Verification ≠ full claim accountability</p>
+          <p class="eq" style="font-size:1.1rem;line-height:1.5">AI involvement ≠ verification threshold<br/>Passing a verification bar ≠ epistemically cost-free<br/>Verification ≠ full claim accountability</p>
         </div>
       </div>
     </div>`;
@@ -3208,7 +3286,7 @@ function renderTeacher() {
     <div class="teacher-top">
       <div>
         <h1>結果與討論</h1>
-        <p style="margin:0;color:var(--ink-muted)">Ethics · Delegation · Epistemic risk · Governance</p>
+        <p style="margin:0;color:var(--ink-muted)">Verification · Delegation · Epistemic risk · Governance</p>
       </div>
     </div>
     ${sectionNavHtml()}
@@ -3331,19 +3409,19 @@ function mountLevelChart() {
       labels: agg.map(a => `L${a.level}`),
       datasets: [
         {
-          label: "可接受 %",
+          label: "寬鬆／直接取用 %",
           data: agg.map(a => a.pctAcceptable),
           backgroundColor: "#2f5d50",
           borderRadius: 4
         },
         {
-          label: "不確定 %",
+          label: "中度驗證 %",
           data: agg.map(a => a.pctUncertain),
           backgroundColor: "#b8a57a",
           borderRadius: 4
         },
         {
-          label: "不可接受 %",
+          label: "拒絕／嚴格驗證 %",
           data: agg.map(a => a.pctUnacceptable),
           backgroundColor: "#8b4f4f",
           borderRadius: 4
@@ -3418,8 +3496,8 @@ function teacherRevealHtml(q) {
   const list = (arr) => (arr && arr.length) ? `<ul style="margin:0.25rem 0 0;padding-left:1.1rem">${arr.map(x=>`<li>${escapeHtml(x)}</li>`).join("")}</ul>` : "—";
   return `
     <div class="dim-block">
-      <div class="dim-title">1. Ethics / Research Integrity</div>
-      上方長條為參與者倫理判斷分布。倫理判斷與 level <strong>分開</strong>。
+      <div class="dim-title">1. Verification threshold｜驗證門檻</div>
+      上方長條為參與者對「別人使用此 prompt」要求的最低驗證程度。驗證門檻與 level <strong>分開</strong>。
       <div style="margin-top:0.35rem;font-size:0.88rem"><strong>Related integrity issues：</strong>${list(q.ethicalIssuesZh || q.ethicalIssuesEn)}</div>
     </div>
     <div class="dim-block">
@@ -3465,7 +3543,7 @@ function openQuestionModal(qid, opts = {}) {
         ${stackBarHtml(stats)}
         <div style="display:flex;flex-wrap:wrap;gap:0.75rem;margin:0.75rem 0;font-size:0.88rem">
           ${[5,4,3,2,1].map(v => {
-            const lab = RESPONSE_LABELS.find(x => x.value === v);
+            const lab = responseLabel(v);
             return `<span>${lab.zh}: <strong>${Math.round(stats.pct[v])}%</strong> (${stats.counts[v]})</span>`;
           }).join("")}
         </div>
